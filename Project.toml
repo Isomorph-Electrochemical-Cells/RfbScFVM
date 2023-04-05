@@ -1,0 +1,26 @@
+name = "RfbScFVM"
+uuid = "23e7ccbb-1615-41d1-a48e-b0710ef7684d"
+authors = ["Roman Schaerer <r.p.s@posteo.ch>"]
+version = "0.1.0"
+
+[deps]
+AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
+FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+GridVisualize = "5eed8a63-0fb0-45eb-886d-8d5a387d12b8"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+VoronoiFVM = "82b139dc-5afc-11e9-35da-9b9bdfd336f3"
+
+[compat]
+julia = "1.9"
