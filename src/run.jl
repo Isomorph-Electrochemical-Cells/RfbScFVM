@@ -106,13 +106,17 @@ function run(input_file_path)
     current_density_values = ustrip.(uconvert.(u"mA/cm^2", current_density_values_nd*params.scales.i0))
     voltage_values = ustrip.(Δϕₛ_values * params.scales.V0)
 
-    # fig_polarization = plot_polarization_curve(current_density_values, voltage_values)
-    # dir_path = joinpath(pwd(), "output/polarization")
-    # mkpath(dir_path)
-    # Makie.save(joinpath(dir_path, "polarization.pdf"), fig_polarization)
 
-    output_folder = params.study.polarization.output_folder
-    #dir_path_validation = joinpath(pwd(), "output/validation")
+    output_path = params.study.polarization.output_folder
+    mkpath(output_path)
+
     polarization_data = hcat(current_density_values, voltage_values)
-    CSV.write(joinpath(output_folder, "polarization.csv"), Tables.table(polarization_data), header=["CurrentDensity[mA/cm^2]", "CellVoltage[V]"])
+    CSV.write(joinpath(output_path, "polarization.csv"), Tables.table(polarization_data);
+              header=["CurrentDensity[mA/cm^2]", "CellVoltage[V]"])
+
+    fig_polarization = plot_polarization_curve(current_density_values, voltage_values)
+    output_path_figures = joinpath(pwd(), "output/figures")
+    mkpath(output_path_figures)
+    Makie.save(joinpath(output_path_figures, "polarization.pdf"), fig_polarization)
+
 end
