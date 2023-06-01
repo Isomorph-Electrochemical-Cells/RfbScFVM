@@ -3,9 +3,9 @@
     domain_id_el_neg = 2
     domain_id_el_pos = 3
     domain_id_cc_pos = 4
-    boundary_id_cc_neg = 5
-    boundary_id_cc_el_neg = 6
-    boundary_id_el_sep_neg = 7
+    boundary_id_el_sep_neg = 5
+    boundary_id_cc_neg = 6
+    boundary_id_cc_el_neg = 7
     boundary_id_el_cc_pos = 8
     boundary_id_cc_pos = 9
     boundary_id_el_neg_inflow = 10
