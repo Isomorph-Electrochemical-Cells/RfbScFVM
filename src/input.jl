@@ -1,5 +1,6 @@
 function parse_json_file(input_file_path)
-    dict_input_parameters = JSON.parsefile(input_file_path; dicttype=Dict, inttype=Int64, use_mmap=true)
+    dict_input_parameters = JSON.parsefile(input_file_path; dicttype=Dict, inttype=Int64,
+                                           use_mmap=true)
     return dict_input_parameters
 end
 
@@ -216,7 +217,7 @@ function preprocess_model_parameters(dict_params)
     dict_electrolyte_params = dict_model_params["electrolyte"]
     dict_species = dict_electrolyte_params["species"]
     species_names = [species["name"] for species in dict_species]
-    num_species = length(species_names)
+    num_species = length(species_names) # consider electroneutrality
     colnames = ["charge", "molar_mass", "diffusivity"]
     reference_units = [1.0*NoUnits, scales.ρ0/scales.C0, scales.D0]
     num_cols = length(colnames)
@@ -236,17 +237,51 @@ function preprocess_model_parameters(dict_params)
 
     electrolyte = ElectrolyteParams{RealType}(species=species, λₜ=λₜ, cpᵥ=cpᵥ)
 
-    ModelParameters(geom=geom,
-                    el_neg=el_neg_pos[1],
-                    el_pos=el_neg_pos[2],
-                    cc_neg=cc_neg_pos[1],
-                    cc_pos=cc_neg_pos[2],
-                    sep=sep,
-                    boundary=boundary_conditions,
-                    discr=discr_params,
-                    study=study_params,
-                    scales=scales,
-                    scaling_params=scaling_params,
-                    electrolyte=electrolyte
-                    )
+    system_variables = init_system_variables(num_species - 1;
+                                        non_isothermal=study_params.non_isothermal)
+
+    model_params = ModelParameters(geom=geom,
+                                    el_neg=el_neg_pos[1],
+                                    el_pos=el_neg_pos[2],
+                                    cc_neg=cc_neg_pos[1],
+                                    cc_pos=cc_neg_pos[2],
+                                    sep=sep,
+                                    boundary=boundary_conditions,
+                                    discr=discr_params,
+                                    study=study_params,
+                                    scales=scales,
+                                    scaling_params=scaling_params,
+                                    electrolyte=electrolyte,
+                                    var=system_variables)
+    return model_params
+end
+
+
+function init_system_variables(num_species; non_isothermal=true)
+    domains = domain_symbols()
+    num_domains = length(domains)
+    domain_def = domain_definitions_table(num_species; non_isothermal)
+    var_indices = subdomain_variable_indices(domain_def)
+    #subdomain_var_id_to_domain_ids = subdomain_variable_id_to_domain_ids(var_indices)
+
+    var_symbols = variable_symbols()
+    var_ext_symbols = variable_symbols(num_species)
+
+    vec_domain_variables = Vector{DomainVariables{Int64, Vector{Int64}}}(undef, num_domains)
+
+    for idx_subdomain in eachindex(vec_domain_variables)
+        indices = var_indices[cols=idx_subdomain]
+
+        vec = Vector{Union{Int64,Vector{Int64}}}(undef, length(var_symbols))
+        for idx in eachindex(var_symbols)
+            ind = collect(indices[var_ext_symbols .== var_symbols[idx]])
+            vec[idx] = length(ind)==1 ? ind[1] : ind
+        end
+        var_symbols_to_indices = NamedTuple{tuple(var_symbols...)}(tuple(vec...))
+        vec_domain_variables[idx_subdomain] = DomainVariables(var_symbols_to_indices...)
+    end
+    return NamedTuple{tuple(domains...)}(vec_domain_variables)
+
+    # return (NamedTuple{tuple(domains...)}(vec_domain_variables),
+    #         subdomain_var_id_to_domain_ids)
 end

@@ -22,5 +22,6 @@ function update_physics_data(data, Δϕₛ)
             scales=data.scales,
             scaling_params=data.scaling_params,
             electrolyte=data.electrolyte,
-            pressure_boundary_type = data.pressure_boundary_type)
+            pressure_boundary_type=data.pressure_boundary_type,
+            var=data.var)
 end

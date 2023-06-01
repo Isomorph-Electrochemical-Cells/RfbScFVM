@@ -1,3 +1,19 @@
+# function system(grid, physics_data)
+#     unknown_storage=:sparse
+#     sys = VoronoiFVM.System(grid, physics_2d(physics_data), unknown_storage=unknown_storage)
+
+#     var_id_to_domain_ids = physics_data.subdomain_var_id_to_domain_ids
+#     for var_id in keys(var_id_to_domain_ids)
+#         enable_species!(sys, var_id, var_id_to_domain_ids[var_id])
+#     end
+
+#     system_idx = unknown_indices(unknowns(sys))
+#     physics_data = (physics_data...,system_idx=system_idx)
+#     physics!(sys, physics_2d(physics_data))
+
+#     return sys
+# end
+
 function system(grid, physics_data)
     unknown_storage=:sparse
     sys = VoronoiFVM.System(grid, physics_2d(physics_data), unknown_storage=unknown_storage)

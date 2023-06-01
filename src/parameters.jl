@@ -148,7 +148,7 @@ end
 end
 
 
-@with_kw struct ModelParameters{T}
+@with_kw struct ModelParameters{T, NamedTupleType}
     geom::FlowCellGeometry2D{T}
     el_neg::ElectrodeParameters{T}
     el_pos::ElectrodeParameters{T}
@@ -161,4 +161,13 @@ end
     scales::CharacteristicScales{T}
     scaling_params::ScalingParameters{T}
     electrolyte::ElectrolyteParams{T}
+    var::NamedTupleType
+end
+
+@with_kw struct DomainVariables{T<:Integer, ArrayType}
+    p::T
+    ϕₛ::T
+    ϕₗ::T
+    c::ArrayType
+    temp::T
 end

@@ -34,7 +34,10 @@ function run(input_file_path)
                     scales=params.scales,
                     scaling_params=params.scaling_params,
                     electrolyte=params.electrolyte,
-                    pressure_boundary_type = :p_in_v_out)
+                    pressure_boundary_type = :p_in_v_out,
+                    var=params.var)
+
+    @infiltrate
 
     sys = system(grid, physics_data)
     println("\nTotal degrees of freedom: ", VoronoiFVM.num_dof(sys))

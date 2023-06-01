@@ -14,9 +14,11 @@ using DataFrames
 using Tables
 using CSV
 using Makie, CairoMakie, GLMakie
+using Infiltrator
 
 include("constants.jl")
 include("units.jl")
+include("utils.jl")
 include("geometry.jl")
 include("grid.jl")
 include("parameters.jl")
