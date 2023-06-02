@@ -91,42 +91,42 @@ function initial_condition!(values, region,
                             coords, initial_data,
                             non_isothermal=false)
     if region == Int(domain_id_cc_neg) # negative current collector
-        values[3] = initial_data.ϕₛ_l
+        values[Int(ϕₛ_l)] = initial_data.ϕₛ_l
         if non_isothermal
-            values[15] = initial_data.temp_l
+            values[Int(temp_l)] = initial_data.temp_l
         end
     end
     if region == Int(domain_id_el_neg) # negative electrode
-        values[1] = initial_data.p_l
-        values[3] = initial_data.ϕₛ_l
-        values[5] = initial_data.ϕₗ_l
-        values[7] = initial_data.c_ox_neg_l
-        values[9] = initial_data.c_red_neg_l
-        values[11] = initial_data.c_ox_pos_l
-        values[13] = initial_data.c_red_pos_l
+        values[Int(p_l)] = initial_data.p_l
+        values[Int(ϕₛ_l)] = initial_data.ϕₛ_l
+        values[Int(ϕₗ_l)] = initial_data.ϕₗ_l
+        values[Int(c_ox_neg_l)] = initial_data.c_ox_neg_l
+        values[Int(c_red_neg_l)] = initial_data.c_red_neg_l
+        values[Int(c_ox_pos_l)] = initial_data.c_ox_pos_l
+        values[Int(c_red_pos_l)] = initial_data.c_red_pos_l
         if non_isothermal
-            values[15] = initial_data.temp_l
+            values[Int(temp_l)] = initial_data.temp_l
         end
     end
     if region == Int(boundary_id_el_sep_neg) && non_isothermal # separator interface boundary
-        values[17] = initial_data.temp_i
+        values[Int(temp_i)] = initial_data.temp_i
     end
     if region == Int(domain_id_el_pos) # positive electrode
-        values[2] = initial_data.p_r
-        values[4] = initial_data.ϕₛ_r
-        values[6] = initial_data.ϕₗ_r
-        values[8] = initial_data.c_ox_neg_r
-        values[10] = initial_data.c_red_neg_r
-        values[12] = initial_data.c_ox_pos_r
-        values[14] = initial_data.c_red_pos_r
+        values[Int(p_r)] = initial_data.p_r
+        values[Int(ϕₛ_r)] = initial_data.ϕₛ_r
+        values[Int(ϕₗ_r)] = initial_data.ϕₗ_r
+        values[Int(c_ox_neg_r)] = initial_data.c_ox_neg_r
+        values[Int(c_red_neg_r)] = initial_data.c_red_neg_r
+        values[Int(c_ox_pos_r)] = initial_data.c_ox_pos_r
+        values[Int(c_red_pos_r)] = initial_data.c_red_pos_r
         if non_isothermal
-            values[16] = initial_data.temp_r
+            values[Int(temp_r)] = initial_data.temp_r
         end
     end
     if region == Int(domain_id_cc_pos) # positive current collector
-        values[4] = initial_data.ϕₛ_r
+        values[Int(ϕₛ_r)] = initial_data.ϕₛ_r
         if non_isothermal
-            values[16] = initial_data.temp_r
+            values[Int(temp_r)] = initial_data.temp_r
         end
     end
 end

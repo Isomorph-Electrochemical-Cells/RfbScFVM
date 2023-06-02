@@ -14,7 +14,11 @@
 # end
 
 function darcy_outflow!(f, u, node, data)
+    @infiltrate
+
+
     if node.region==Int(boundary_id_el_neg_outflow)
+        @infiltrate
         f[data.var[:el_neg].p] = data.boundary.v_out_neg
     elseif node.region==Int(boundary_id_el_pos_outflow)
         f[data.var[:el_pos].p] = data.boundary.v_out_pos
@@ -33,8 +37,9 @@ function species_outflow!(f, u, node, data)
             v_out = PE0*data.boundary.v_out_pos
             domain_id = :el_pos
         end
-        for idx_species in data.var[domain_id].c
-            f[idx_species] = v_out*u[idx_species]
+        indices = data.var[domain_id].c
+        for idx in indices
+            f[idx] = v_out*u[idx]
         end
     end
 end
@@ -72,16 +77,6 @@ function heat_exchange_boundary!(f, u, bnode, data)
 end
 
 
-# function heat_exchange_boundary!(f, u, bnode, data)
-#     LE0 = data.scaling_params.LE0
-#     if bnode.region == Int(boundary_id_cc_neg)
-#         f[Int(temp_l)] = LE0 * data.cc_neg.hₜ * (u[Int(temp_l)]-data.boundary.temp_amb)
-#     end
-#     if bnode.region == Int(boundary_id_cc_pos)
-#         f[Int(temp_r)] = LE0 * data.cc_pos.hₜ * (u[Int(temp_r)]-data.boundary.temp_amb)
-#     end
-# end
-
 function concentration_counter_species(u, region, data, node)
     if region == domain_id(:el_neg) || region == domain_id(:el_pos)
         indices = data.var[Int(region)].c
@@ -104,38 +99,6 @@ function concentration_counter_species(u, region, data, node)
     end
     return 0.0
 end
-
-# function concentration_counter_species(u, region, data, node)
-#     if region == Int(domain_id_el_neg) || region == Int(domain_id_el_pos)
-#         if region == Int(domain_id_el_neg)
-#             indices = [Int(c_ox_neg_l), Int(c_red_neg_l),
-#                     Int(c_ox_pos_l), Int(c_red_pos_l)]
-
-#         else
-#             indices = [Int(c_ox_neg_r), Int(c_red_neg_r),
-#                        Int(c_ox_pos_r), Int(c_red_pos_r)]
-#         end
-#         species = data.electrolyte.species
-#         c_counter = 0.0
-#         # WARNING: Currently, the following assumes the counter species to be listed last in data.electrolyte.species
-#         # TODO: Extract data based on species names
-#         for idx_species in eachindex(indices)
-#             z = species[row=idx_species, col="charge"]
-#             if node == 0
-#                 c = u[indices[idx_species]]
-#             else
-#                 c = u[indices[idx_species], node]
-#             end
-#             c_counter -= z * c
-#         end
-#         c_counter /= species[row="counter", col="charge"]
-#         if c_counter <= 0
-#             @warn c_counter
-#         end
-#         return c_counter
-#     end
-#     return 0.0
-# end
 
 function σl_eff(u, region, data, deff_factor, node=0)
     if region == domain_id(:el_neg) || region == domain_id(:el_pos)
@@ -170,8 +133,11 @@ function σl_eff(u, region, data, deff_factor, node=0)
 end
 
 function system_flux!(f, u, edge, data)
+    @infiltrate
+
     # Flux of Darcy's law
     if edge.region == domain_id(:el_neg)
+        @infiltrate
         kₕ = data.el_neg.kₕ
         μ = data.el_neg.μ
         idx_p = data.var[Int(edge.region)].p
@@ -232,8 +198,8 @@ function system_flux!(f, u, edge, data)
                 concentration_counter_species(u, edge.region, data, 2)
         f[idx_ϕₗ] += deff * z * Δc
 
-        for idx in eachindex(data.var[Int(edge.region)].c)
-            idx_c = data.var[Int(edge.region)].c[idx]
+        for idx in eachindex(indices)
+            idx_c = indices[idx]
             d = data.electrolyte.species[row=idx, col="diffusivity"]
             deff_factor = effective_diffusivity_factor(0.0, 0.0, edge.region, data)
             v_out = edge.region == domain_id(:el_neg) ? data.boundary.v_out_neg : data.boundary.v_out_pos
@@ -289,158 +255,79 @@ function system_flux!(f, u, edge, data)
 end
 
 
-# function system_flux!(f, u, edge, data)
-#     # Flux of Darcy's law
-#     if edge.region == Int(domain_id_el_neg)
-#         kₕ = data.el_neg.kₕ
-#         μ = data.el_neg.μ
-#         f[Int(p_l)] = kₕ/μ * (u[Int(p_l), 1] - u[Int(p_l), 2])
-#     end
-#     if edge.region == Int(domain_id_el_pos)
-#         kₕ = data.el_pos.kₕ
-#         μ = data.el_pos.μ
-#         f[Int(p_r)] = kₕ/μ * (u[Int(p_r), 1] - u[Int(p_r), 2])
-#     end
 
-#     # Flux of the electrostatic potential ϕₛ
-#     if edge.region == Int(domain_id_cc_neg)
-#         σs_eff = data.cc_neg.σₑ
-#     elseif edge.region == Int(domain_id_cc_pos)
-#         σs_eff = data.cc_pos.σₑ
-#     elseif edge.region == Int(domain_id_el_neg)
-#         σs_eff = data.el_neg.σₑ
-#     elseif edge.region == Int(domain_id_el_pos)
-#         σs_eff = data.el_pos.σₑ
-#     end
-#     if edge.region == Int(domain_id_cc_neg) || edge.region == Int(domain_id_el_neg)
-#         f[Int(ϕₛ_l)] = σs_eff * (u[Int(ϕₛ_l), 1] - u[Int(ϕₛ_l), 2])
-#     end
-#     if edge.region == Int(domain_id_cc_pos) || edge.region == Int(domain_id_el_pos)
-#         f[Int(ϕₛ_r)] = σs_eff * (u[Int(ϕₛ_r), 1] - u[Int(ϕₛ_r), 2])
-#     end
+# function system_internal_interface_flux!(f, u, bnode, data)
+#     if bnode.region == boundary_id(:sep)
+# 		h = data.geom.lx_sep #thickness of the separator
 
-#     # Velocity based on Darcy's law projected on edge # TODO: Merge with above sectoin
-#     if edge.region == Int(domain_id_el_neg)
-#         kₕ = data.el_neg.kₕ
-#         μ = data.el_neg.μ
-#         vh = kₕ/μ * (u[Int(p_l), 1] - u[Int(p_l), 2])
-#     elseif edge.region == Int(domain_id_el_pos)
-#         kₕ = data.el_pos.kₕ
-#         μ = data.el_pos.μ
-#         vh = kₕ/μ * (u[Int(p_r), 1] - u[Int(p_r), 2])
-#     else
-#         vh = 0.0
-#     end
-#     h = meas(edge)
-#     v = vh / h
+#         # flow velocity due to a hydrostatic pressure difference across the separator
+#         idx_p_l = data.var[:el_neg].p
+#         idx_p_r = data.var[:el_pos].p
+# 		vₕ = -data.sep.kh / data.sep.μ * (u[idx_p_r] - u[idx_p_l]) / h
+#         # electrokinetic effect
+#         idx_ϕₗ_l = data.var[:el_neg].ϕₗ
+#         idx_ϕₗ_r = data.var[:el_pos].ϕₗ
+#         vₑ = data.sep.kϕ * data.sep.cf * data.sep.zf * (u[idx_ϕₗ_r] - u[idx_ϕₗ_l])
+#         vₑ /= (data.sep.μ * h * data.scaling_params.PE0)
+#         v = vₕ + vₑ
 
-#     PE0 = data.scaling_params.PE0
+#         f[idx_p_l] = v # left volumetric flux
+#         f[idx_p_r] = -v # right volumetric flux
 
-#     # Flux of the electrostatic potential ϕₗ
-#     if edge.region == Int(domain_id_el_neg)
-#         deff_factor = effective_diffusivity_factor(0.0, 0.0, edge.region, data)
-#         dstar_factor = effective_diffusivity_factor(abs(data.boundary.v_out_neg), 0.0, edge.region, data)
-#         σl_eff_avg = (σl_eff(u, edge.region, data, deff_factor, 1) + σl_eff(u, edge.region, data, deff_factor, 2))/2
-#         f[Int(ϕₗ_l)] = σl_eff_avg * (u[Int(ϕₗ_l), 1] - u[Int(ϕₗ_l), 2])
-#         indices = [Int(c_ox_neg_l), Int(c_red_neg_l),
-#                    Int(c_ox_pos_l), Int(c_red_pos_l)]
-#         species = data.electrolyte.species
-#         for idx_species in eachindex(indices)
-#             d = species[row=idx_species, col="diffusivity"]
-#             deff = d * dstar_factor
-#             z = species[row=idx_species, col="charge"]
-#             Δc = u[indices[idx_species], 1] - u[indices[idx_species], 2]
-#             f[Int(ϕₗ_l)] += deff * z * Δc
+#         # evaluate Donnan potentials
+#         z_c = data.electrolyte.species[row="counter", col="charge"]
+#         ϵ = eps(eltype(u))
+#         c_c_el_l = concentration_counter_species(u, domain_id(:el_neg), data, 0) + ϵ
+#         @infiltrate
+#         @assert c_c_el_l > 0
+#         c_c_el_r = concentration_counter_species(u, domain_id(:el_pos), data, 0) + ϵ
+#         @assert c_c_el_r > 0
+#         c_c_sep = -data.sep.cf * data.sep.zf / z_c
+#         @assert c_c_sep > 0
+#         ϕₗ_sep_l = u[idx_ϕₗ_l] + 1/z_c * log(c_c_el_l / c_c_sep)
+#         ϕₗ_sep_r = u[idx_ϕₗ_r] + 1/z_c * log(c_c_el_r / c_c_sep)
+
+#         σₑ_sep = data.sep.σₑ
+#         if data.study.non_isothermal
+#             @show data.var
+#             idx_temp = data.var[:sep].temp
+
+#             σₑ_sep += data.sep.∂σₑ∂temp * (u[idx_temp] - data.sep.temp_ref)
 #         end
-#         d = species[row="counter", col="diffusivity"]
-#         deff = d * dstar_factor
-#         z = species[row="counter", col="charge"]
-#         Δc = concentration_counter_species(u, edge.region, data, 1) -
-#                 concentration_counter_species(u, edge.region, data, 2)
-#         f[Int(ϕₗ_l)] += deff * z * Δc
-#     end
+#         current_flux_sep = -σₑ_sep * (ϕₗ_sep_r - ϕₗ_sep_l) / h
 
-#     if edge.region == Int(domain_id_el_pos)
-#         deff_factor = effective_diffusivity_factor(0.0, 0.0, edge.region, data)
-#         dstar_factor = effective_diffusivity_factor(abs(data.boundary.v_out_pos), 0.0, edge.region, data)
-#         σl_eff_avg = (σl_eff(u, edge.region, data, deff_factor, 1) + σl_eff(u, edge.region, data, deff_factor, 2))/2
-#         f[Int(ϕₗ_r)] = σl_eff_avg * (u[Int(ϕₗ_r),1] - u[Int(ϕₗ_r),2])
-#         indices = [Int(c_ox_neg_r), Int(c_red_neg_r),
-#                    Int(c_ox_pos_r), Int(c_red_pos_r)]
-#         species = data.electrolyte.species
-#         for idx_species in eachindex(indices)
-#             d = species[row=idx_species, col="diffusivity"]
-#             deff = d * dstar_factor
-#             z = species[row=idx_species, col="charge"]
-#             Δc = u[indices[idx_species], 1] - u[indices[idx_species], 2]
-#             f[Int(ϕₗ_r)] += deff * z * Δc
+#         f[idx_ϕₗ_l] = current_flux_sep
+#         f[idx_ϕₗ_r] = -current_flux_sep
+
+#         if data.study.non_isothermal
+#             PE0 = data.scaling_params.PE0
+#             LE0 = data.scaling_params.LE0
+#             cpᵥ_sep = data.sep.cpᵥ
+#             λₜ_sep = data.sep.λₜ
+
+#             idx_temp_l = data.var[:el_neg].temp
+#             idx_temp_sep = data.var[:sep].temp
+#             idx_temp_r = data.var[:el_pos].temp
+#             heat_flux_left = fvc_flux_Δx(u[idx_temp_l], u[idx_temp_sep],
+#                                            PE0*cpᵥ_sep*v,
+#                                            LE0*λₜ_sep,
+#                                            h/2)
+
+#             heat_flux_right = fvc_flux_Δx(u[idx_temp_sep], u[idx_temp_r],
+#                                             PE0*cpᵥ_sep*v,
+#                                             LE0*λₜ_sep,
+#                                             h/2)
+
+#             f[idx_temp_l] = heat_flux_left / (h/2)
+#             f[idx_temp_r] = -heat_flux_right / (h/2)
+#             f[idx_temp_sep] = -(heat_flux_left - heat_flux_right) / (h/2)
 #         end
-#         d = species[row="counter", col="diffusivity"]
-#         deff = d * dstar_factor
-#         z = species[row="counter", col="charge"]
-#         Δc = concentration_counter_species(u, edge.region, data, 1) -
-#                 concentration_counter_species(u, edge.region, data, 2)
-#         f[Int(ϕₗ_r)] += deff * z * Δc
-#     end
-
-#     # Species fluxes
-#     for idx_species in 7:14
-#         idx = 1 + Int(floor((idx_species-7)/2)) # TODO: Check this
-#         d = data.electrolyte.species[row=idx, col="diffusivity"]
-#         deff_factor = effective_diffusivity_factor(0.0, 0.0, edge.region, data)
-#         dstar_factor = effective_diffusivity_factor(abs(data.boundary.v_out_neg), 0.0, edge.region, data)
-
-#         # Migration term
-#         migration = 0.0
-#         if data.study.migration
-#             if data.study.non_isothermal
-#                 temp = (idx_species % 2 == 1) ? (u[Int(temp_l), 1] + u[Int(temp_l), 2]) / 2 : (u[Int(temp_r), 1] + u[Int(temp_r), 2]) / 2
-#             else
-#                 temp = 1.0
-#             end
-
-#             idx_ϕₗ = edge.region == Int(domain_id_el_neg) ? Int(ϕₗ_l) : Int(ϕₗ_r)
-#             ∂ϕ∂n =  (u[idx_ϕₗ, 1] - u[idx_ϕₗ, 2])
-
-#             z = data.electrolyte.species[row=idx, col="charge"]
-#             migration = -z * (d * deff_factor) * ∂ϕ∂n / temp
-#         end
-
-#         f[idx_species] = fvc_flux_Δx(u[idx_species, 1],
-#                                      u[idx_species, 2], PE0*vh - migration, d * dstar_factor)
-#     end
-
-#     if data.study.non_isothermal
-#         # Heat flux
-#         LE0 = data.scaling_params.LE0
-#         if edge.region == Int(domain_id_cc_neg)
-#             cpᵥ = data.cc_neg.cpᵥ
-#             λₜ = data.cc_neg.λₜ
-#         elseif edge.region == Int(domain_id_cc_pos)
-#             cpᵥ = data.cc_pos.cpᵥ
-#             λₜ = data.cc_pos.λₜ
-#         elseif edge.region == Int(domain_id_el_neg)
-#             εₗ = data.el_neg.εₗ
-#             cpᵥ = data.electrolyte.cpᵥ # εₗ * data.electrolyte.cpᵥ + (1-εₗ) * data.el_neg.cpᵥ
-#             λₜ = data.electrolyte.λₜ # εₗ * data.electrolyte.λₜ + (1-εₗ) * data.el_neg.λₜ
-#         elseif edge.region == Int(domain_id_el_pos)
-#             εₗ = data.el_pos.εₗ
-#             cpᵥ = data.electrolyte.cpᵥ #εₗ * data.electrolyte.cpᵥ + (1-εₗ) * data.el_pos.cpᵥ
-#             λₜ = data.electrolyte.λₜ #εₗ * data.electrolyte.λₜ + (1-εₗ) * data.el_pos.λₜ
-#         else
-#             @assert false
-#         end
-
-#         f[Int(temp_l)] = fvc_flux_Δx(u[Int(temp_l), 1], u[Int(temp_l), 2],
-#                                     PE0 * cpᵥ * vh, LE0 * λₜ)
-#         f[Int(temp_r)] = fvc_flux_Δx(u[Int(temp_r), 1], u[Int(temp_r), 2],
-#                                     PE0 * cpᵥ * vh, LE0 * λₜ)
 #     end
 # end
 
-
 function system_internal_interface_flux!(f, u, bnode, data)
     if bnode.region == Int(boundary_id_el_sep_neg)
+        @infiltrate
 		h = data.geom.lx_sep #thickness of the separator
 
         # flow velocity due to a hydrostatic pressure difference across the separator
@@ -530,6 +417,8 @@ end
 
 
 function system_bcondition!(f, u, bnode, data)
+    @infiltrate
+
     if data.pressure_boundary_type == :p_in_v_out
         darcy_outflow!(f, u, bnode, data)
     end

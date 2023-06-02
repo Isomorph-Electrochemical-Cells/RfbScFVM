@@ -260,8 +260,8 @@ end
 function init_system_variables(num_species; non_isothermal=true)
     domains = domain_symbols()
     num_domains = length(domains)
-    domain_def = domain_definitions_table(num_species; non_isothermal)
-    var_indices = subdomain_variable_indices(domain_def)
+    domain_def = domain_definitions_table(num_species, non_isothermal)
+    var_indices = subdomain_variable_indices(domain_def, non_isothermal)
     #subdomain_var_id_to_domain_ids = subdomain_variable_id_to_domain_ids(var_indices)
 
     var_symbols = variable_symbols()
@@ -280,6 +280,9 @@ function init_system_variables(num_species; non_isothermal=true)
         var_symbols_to_indices = NamedTuple{tuple(var_symbols...)}(tuple(vec...))
         vec_domain_variables[idx_subdomain] = DomainVariables(var_symbols_to_indices...)
     end
+
+    @infiltrate
+
     return NamedTuple{tuple(domains...)}(vec_domain_variables)
 
     # return (NamedTuple{tuple(domains...)}(vec_domain_variables),

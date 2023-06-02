@@ -1,9 +1,5 @@
 function domain_symbols(non_isothermal=false)
-    if non_isothermal
-        return [:cc_neg, :el_neg, :el_pos, :cc_pos, :sep]
-    else
-        return [:cc_neg, :el_neg, :el_pos, :cc_pos]
-    end
+    return [:cc_neg, :el_neg, :el_pos, :cc_pos, :sep]
 end
 
 function domain_id(domain_sym)
@@ -63,7 +59,7 @@ function variable_symbol_to_indices(num_species)
          :c => collect(4:4+num_species-1), :temp => [4+num_species])
 end
 
-function variable_domain_definitions(;non_isothermal=true)
+function variable_domain_definitions(non_isothermal=true)
     d = Dict(:p => [:el_neg, :el_pos], :ϕₛ => [:cc_neg, :el_neg, :el_pos, :cc_pos],
         :ϕₗ => [:el_neg, :el_pos], :c => [:el_neg, :el_pos])
     d[:temp] = non_isothermal ? [:cc_neg, :el_neg, :sep, :el_pos, :cc_pos] : []
@@ -75,10 +71,10 @@ function variable_continuity()
     # Dict((:cc_neg, :el_neg) => true, (:el_neg, :sep) => false,
     #      (:sep, :el_pos) => false, (:el_pos, :cc_pos) => true)
     Dict((:cc_neg, :el_neg) => true, (:el_neg, :el_pos) => false,
-         (:el_pos, :cc_pos) => true)
+         (:el_pos, :cc_pos) => true, (:cc_pos, :sep) => false)
 end
 
-function domain_definitions_table(num_species; non_isothermal=true)
+function domain_definitions_table(num_species, non_isothermal=true)
     domains = domain_symbols(non_isothermal)
     num_domains = length(domains)
     variables = variable_symbols(num_species)
@@ -88,7 +84,7 @@ function domain_definitions_table(num_species; non_isothermal=true)
                                         rows=variables, cols=domains)
 
     sym2idx = variable_symbol_to_indices(num_species)
-    var_dom_def = variable_domain_definitions(;non_isothermal)
+    var_dom_def = variable_domain_definitions(non_isothermal)
 
     for var in variables
         subdomains = var_dom_def[var]
@@ -98,7 +94,7 @@ function domain_definitions_table(num_species; non_isothermal=true)
     return enabled_variables
 end
 
-function subdomain_variable_indices(domain_def)
+function subdomain_variable_indices(domain_def, non_isothermal)
     (num_variables, num_domains) = size(domain_def)
     subdomain_var_idx = AxisArray(zeros(Int64, num_variables, num_domains),
                                  rows=AxisArrays.axes(domain_def)[1],
@@ -109,7 +105,7 @@ function subdomain_variable_indices(domain_def)
     var_discontinuity = zeros(Bool, num_domains)
     var_discontinuity[1] = false
     var_continuity = variable_continuity()
-    domains = domain_symbols()
+    domains = domain_symbols(non_isothermal)
     for idx_subdomain in 1:length(domains)-1
         var_discontinuity[idx_subdomain+1] = !var_continuity[(domains[idx_subdomain],
                                                               domains[idx_subdomain+1])]
@@ -125,20 +121,20 @@ function subdomain_variable_indices(domain_def)
     return subdomain_var_idx
 end
 
-# function subdomain_variable_id_to_domain_ids(subdomain_var_idx_table)
-#     dict_var_id_to_domain_ids = Dict()
-#     domain_ids = AxisArrays.axes(subdomain_var_idx_table)[2]
-#     (num_rows, num_cols) = size(subdomain_var_idx_table)
-#     for idx_row in 1:num_rows
-#         row = @view(subdomain_var_idx_table[rows=idx_row])
-#         unique_var_ids = filter(x->(x>0),unique(row))
-#         @show unique_var_ids
-#         for var_id in unique_var_ids
-#             ids = domain_ids[row .== var_id]
-#             if !isempty(ids)
-#                 dict_var_id_to_domain_ids[var_id] = domain_id.(ids)
-#             end
-#         end
-#     end
-#     return dict_var_id_to_domain_ids
-# end
+function subdomain_variable_id_to_domain_ids(subdomain_var_idx_table)
+    dict_var_id_to_domain_ids = Dict()
+    domain_ids = AxisArrays.axes(subdomain_var_idx_table)[2]
+    (num_rows, num_cols) = size(subdomain_var_idx_table)
+    for idx_row in 1:num_rows
+        row = @view(subdomain_var_idx_table[rows=idx_row])
+        unique_var_ids = filter(x->(x>0),unique(row))
+        @show unique_var_ids
+        for var_id in unique_var_ids
+            ids = domain_ids[row .== var_id]
+            if !isempty(ids)
+                dict_var_id_to_domain_ids[var_id] = domain_id.(ids)
+            end
+        end
+    end
+    return dict_var_id_to_domain_ids
+end
