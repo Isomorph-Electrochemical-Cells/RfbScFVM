@@ -55,7 +55,9 @@ Subsequently, each simulation can be executed by running:
 ```bash
 $ juliaclient scripts/run_simulation.jl "input/some_input_file.json"
 ```
+## License
 
+The RfbScFVM.jl package is released under the MIT license (see [https://opensource.org/license/MIT/](https://opensource.org/license/MIT/) for additional information).
 
 ## Acknowledgements
 
