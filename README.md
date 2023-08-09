@@ -1,4 +1,4 @@
-# RfbScFVM.jl: Performance Prediction of Flow Battery Cells
+# Performance Prediction of Flow Battery Cells
 
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
