@@ -120,9 +120,11 @@ end
 end
 
 @kwdef struct DiscretizationParameters{T<:AbstractFloat}
-    spatial_discretization::String
-    temporal_discretization::String
-    relative_tolerance::T
+    spatial_discr::String
+    temporal_discr::String
+    maxiters::T
+    reltol::T
+    abstol::T
 end
 
 function ScalingParameters{T}(scales::CharacteristicScales{T}) where {T<:AbstractFloat}

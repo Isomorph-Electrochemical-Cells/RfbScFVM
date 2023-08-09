@@ -43,7 +43,6 @@ function preprocess_model_parameters(dict_params)
     ly_cell = ly_cell / lx |> NoUnits
 
     mesh_params = dict_params["discretization_parameters"]["mesh"]
-    @assert mesh_params["type"] == "rectilinear"
     mesh_sizes = mesh_params["relative_mesh_sizes"]
     hy_rel_cell = mesh_sizes["hy_cell"]
     hx_rel_cc_neg = mesh_sizes["hx_cc_neg"]
@@ -220,11 +219,15 @@ function preprocess_model_parameters(dict_params)
     dict_discr_params = dict_params["discretization_parameters"]
     spatial_discr = dict_discr_params["spatial_discretization"]
     temporal_discr = dict_discr_params["temporal_discretization"]
-    relative_tol = dict_discr_params["relative_tolerance"]
-    discr_params = DiscretizationParameters{RealType}(
-                                        spatial_discretization=spatial_discr,
-                                        temporal_discretization=temporal_discr,
-                                        relative_tolerance=relative_tol)
+    maxiters = dict_discr_params["max_iterations"]
+    abstol = dict_discr_params["absolute_tolerance"]
+    reltol = dict_discr_params["relative_tolerance"]
+
+    discr_params = DiscretizationParameters{RealType}(spatial_discr=spatial_discr,
+                                                      temporal_discr=temporal_discr,
+                                                      maxiters=maxiters,
+                                                      abstol=abstol,
+                                                      reltol=reltol)
     dict_study_params = dict_params["study_parameters"]
 
     dict_polarization_params = dict_study_params["polarization"]

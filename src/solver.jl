@@ -12,12 +12,13 @@ function solve_steady_state_problem(system, inival, applied_voltage_values; verb
 
     norm_step = maximum(norm_embed[2:end]-norm_embed[1:(end-1)])
 
+    maxiters = system.physics.data.discr.maxiters
+    abstol = system.physics.data.discr.abstol
+    reltol = system.physics.data.discr.reltol
     # Stationary solution of the problem
-    solution = VoronoiFVM.solve(system, control=control, inival=inival,
-                                embed=norm_embed,
+    solution = VoronoiFVM.solve(system, control=control, inival=inival, embed=norm_embed,
                                 Δp=norm_step, Δp_max=norm_step, Δp_min=norm_step/10,
-                                maxiters=10, abstol=1e-8, reltol=1e-4,
-                                tol_round=1e-8, max_round=2, Δu_opt=1,
+                                maxiters=maxiters, abstol=abstol, reltol=reltol, Δu_opt=1,
                                 pre=(sol, embed)->pre_step(system, sol, embed,
                                                            voltage_start, voltage_stop),
                                 post=(sol, oldsol, embed, Δembed)->post_step(system, sol))

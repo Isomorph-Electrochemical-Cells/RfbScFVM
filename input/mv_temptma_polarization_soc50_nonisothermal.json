@@ -162,12 +162,13 @@
         }
     },
     "discretization_parameters": {
-        "spatial_discretization": "fvm",
+        "spatial_discretization": "fvm_2d",
         "temporal_discretization": "backward_euler",
-        "relative_tolerance": 1e-6,
+        "max_iterations": 10,
+        "relative_tolerance": 1e-4,
+        "absolute_tolerance": 1e-8,
         "mesh":
         {
-            "type": "rectilinear",
             "relative_mesh_sizes": {
                 "hy_cell": [0.005, 0.01, 0.01, 0.01],
                 "hx_cc_neg": [0.3, 0.2],
