@@ -55,3 +55,8 @@ Subsequently, each simulation can be executed by running:
 ```bash
 $ juliaclient scripts/run_simulation.jl "input/some_input_file.json"
 ```
+
+
+## Acknowledgements
+
+This work is part of the SONAR project supported by the European Union / European Commission funding program Horizon 2020.
