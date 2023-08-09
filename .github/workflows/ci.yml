@@ -62,5 +62,7 @@ jobs:
             doctest(MYPACKAGE)' # change MYPACKAGE to the name of your package
       - run: julia --project=docs docs/make.jl
         env:
+          PYTHON: ""
+          DISPLAY: 0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
