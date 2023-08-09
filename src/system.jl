@@ -1,86 +1,60 @@
-# function system(grid, physics_data)
-#     unknown_storage=:sparse
-#     sys = VoronoiFVM.System(grid, physics_2d(physics_data), unknown_storage=unknown_storage)
-
-#     var_id_to_domain_ids = physics_data.subdomain_var_id_to_domain_ids
-#     for var_id in keys(var_id_to_domain_ids)
-#         enable_species!(sys, var_id, var_id_to_domain_ids[var_id])
-#     end
-
-#     system_idx = unknown_indices(unknowns(sys))
-#     physics_data = (physics_data...,system_idx=system_idx)
-#     physics!(sys, physics_2d(physics_data))
-
-#     return sys
-# end
-
-function system(grid, physics_data)
+function system(grid, data)
     unknown_storage=:sparse
-    sys = VoronoiFVM.System(grid, physics_2d(physics_data), unknown_storage=unknown_storage)
+    sys = VoronoiFVM.System(grid, physics_2d(data), unknown_storage=unknown_storage)
 
     # specify the domains of definition of the variables
-    # in the reduced interface modelling approach each variable x is split into
-    # a variable x_l and x_r defined over the domain left and right of the interface, respectively
-    enable_species!(sys, Int(p_l), [Int(domain_id_el_neg)])
-    enable_species!(sys, Int(p_r), [Int(domain_id_el_pos)])
-    enable_species!(sys, Int(ϕₛ_l), [Int(domain_id_cc_neg), Int(domain_id_el_neg)])
-    enable_species!(sys, Int(ϕₛ_r), [Int(domain_id_el_pos), Int(domain_id_cc_pos)])
-    enable_species!(sys, Int(ϕₗ_l), [Int(domain_id_el_neg)])
-    enable_species!(sys, Int(ϕₗ_r), [Int(domain_id_el_pos)])
+    enable_species!(sys, data.idx[data.dom[:el_neg]].p, [data.dom[:el_neg]])
+    enable_species!(sys, data.idx[data.dom[:el_pos]].p, [data.dom[:el_pos]])
+    enable_species!(sys, data.idx[data.dom[:el_neg]].ϕₛ, [data.dom[:cc_neg],
+                                                             data.dom[:el_neg]])
+    enable_species!(sys, data.idx[data.dom[:el_pos]].ϕₛ, [data.dom[:el_pos],
+                                                              data.dom[:cc_pos]])
+    enable_species!(sys, data.idx[data.dom[:el_neg]].ϕₗ, [data.dom[:el_neg]])
+    enable_species!(sys, data.idx[data.dom[:el_pos]].ϕₗ, [data.dom[:el_pos]])
 
-    enable_species!(sys, Int(c_ox_neg_l), [Int(domain_id_el_neg)])
-    enable_species!(sys, Int(c_ox_neg_r), [Int(domain_id_el_pos)])
-    enable_species!(sys, Int(c_red_neg_l), [Int(domain_id_el_neg)])
-    enable_species!(sys, Int(c_red_neg_r), [Int(domain_id_el_pos)])
-
-    enable_species!(sys, Int(c_ox_pos_l), [Int(domain_id_el_neg)])
-    enable_species!(sys, Int(c_ox_pos_r), [Int(domain_id_el_pos)])
-    enable_species!(sys, Int(c_red_pos_l), [Int(domain_id_el_neg)])
-    enable_species!(sys, Int(c_red_pos_r), [Int(domain_id_el_pos)])
-
-    if physics_data.study.non_isothermal
-        println("Enable Heat Balance Equation")
-        enable_species!(sys, Int(temp_l), [Int(domain_id_cc_neg), Int(domain_id_el_neg)])
-        enable_species!(sys, Int(temp_r), [Int(domain_id_el_pos), Int(domain_id_cc_pos)])
-        enable_boundary_species!(sys, Int(temp_i), [Int(boundary_id_el_sep_neg)])
+    for idx_species in data.idx[data.dom[:el_neg]].c
+        enable_species!(sys, idx_species, [data.dom[:el_neg]])
     end
 
-    system_idx = unknown_indices(unknowns(sys))
-    physics_data = (physics_data...,system_idx=system_idx)
-    physics!(sys, physics_2d(physics_data))
+    for idx_species in data.idx[data.dom[:el_pos]].c
+        enable_species!(sys, idx_species, [data.dom[:el_pos]])
+    end
+
+    if data.study.non_isothermal
+        println("Enable Heat Balance Equation")
+        temp_l = data.idx[data.dom[:el_neg]].temp
+        temp_r = data.idx[data.dom[:el_pos]].temp
+        temp_i = data.idx[data.dom[:sep]].temp
+        enable_species!(sys, temp_l, [data.dom[:cc_neg], data.dom[:el_neg]])
+        enable_species!(sys, temp_r, [data.dom[:cc_pos], data.dom[:el_pos]])
+        enable_boundary_species!(sys, temp_i, [data.bnd[:sep]])
+    end
+
+    physics!(sys, physics_2d(data))
 
     return sys
 end
 
-function initial_condition(system, grid, initial_data, non_isothermal=false)
+function initial_condition(system, grid, initial_data, data)
     # Create a solution array
     inival = unknowns(system)
     inival .= 0.0
 
     node_coords = grid.components[ExtendableGrids.Coordinates]
 
-    # for idx_coords in size(node_coords)[2]
-    #     coords = vec(node_coords[:, idx_coords])
-
-    #     inival[1, idx_coords] .= voltage_neg
-    #     inival[2, idx_coords] .= voltage_pos
-    #     inival[3, idx_coords] .= 0.0
-    #     inival[4, idx_coords] .= initial_species_concentration(coords)
-    #     inival[5, idx_coords] .= initial_species_concentration(coords)
-    #     inival[6, idx_coords] .= initial_species_concentration(coords)
-    #     inival[7, idx_coords] .= initial_species_concentration(coords)
-    # end
-
     cell_nodes = grid.components[ExtendableGrids.CellNodes]
     cell_regions = grid.components[ExtendableGrids.CellRegions]
-    num_variables = non_isothermal ? length(instances(Variables)) : length(instances(Variables))-3
+    non_isothermal = data.study.non_isothermal
+    num_species = 2*length(data.electrolyte.species[col=1])
+    num_variables = non_isothermal ? 9+num_species : 6+num_species
+
     values = zeros(num_variables)
     for idx_cell in 1:size(cell_nodes)[2]
         for idx_node in 1:size(cell_nodes)[1]
             node = cell_nodes[idx_node, idx_cell]
             coords = node_coords[:,node]
             region = cell_regions[node]
-            initial_condition!(values, region, coords, initial_data, non_isothermal)
+            initial_condition!(values, region, coords, initial_data, data)
             inival[:, node] .= values
         end
     end
@@ -89,44 +63,31 @@ end
 
 function initial_condition!(values, region,
                             coords, initial_data,
-                            non_isothermal=false)
-    if region == Int(domain_id_cc_neg) # negative current collector
-        values[Int(ϕₛ_l)] = initial_data.ϕₛ_l
+                            data)
+    non_isothermal = data.study.non_isothermal
+
+    # negative or positive current collector
+    if region == data.dom[:cc_neg] || region == data.dom[:cc_pos]
+        values[data.idx[region].ϕₛ] = initial_data[region].ϕₛ
         if non_isothermal
-            values[Int(temp_l)] = initial_data.temp_l
+            values[data.idx[region].temp] = initial_data[region].temp
         end
     end
-    if region == Int(domain_id_el_neg) # negative electrode
-        values[Int(p_l)] = initial_data.p_l
-        values[Int(ϕₛ_l)] = initial_data.ϕₛ_l
-        values[Int(ϕₗ_l)] = initial_data.ϕₗ_l
-        values[Int(c_ox_neg_l)] = initial_data.c_ox_neg_l
-        values[Int(c_red_neg_l)] = initial_data.c_red_neg_l
-        values[Int(c_ox_pos_l)] = initial_data.c_ox_pos_l
-        values[Int(c_red_pos_l)] = initial_data.c_red_pos_l
+    # negative or positive electrode
+    if region == data.dom[:el_neg] || region == data.dom[:el_pos]
+        values[data.idx[region].p] = initial_data[region].p
+        values[data.idx[region].ϕₛ] = initial_data[region].ϕₛ
+        values[data.idx[region].ϕₗ] = initial_data[region].ϕₗ
+
+        for idx_species in eachindex(data.idx[region].c)
+            values[data.idx[region].c[idx_species]] = initial_data[region].c[idx_species]
+        end
         if non_isothermal
-            values[Int(temp_l)] = initial_data.temp_l
+            values[data.idx[region].temp] = initial_data[region].temp
         end
     end
-    if region == Int(boundary_id_el_sep_neg) && non_isothermal # separator interface boundary
-        values[Int(temp_i)] = initial_data.temp_i
-    end
-    if region == Int(domain_id_el_pos) # positive electrode
-        values[Int(p_r)] = initial_data.p_r
-        values[Int(ϕₛ_r)] = initial_data.ϕₛ_r
-        values[Int(ϕₗ_r)] = initial_data.ϕₗ_r
-        values[Int(c_ox_neg_r)] = initial_data.c_ox_neg_r
-        values[Int(c_red_neg_r)] = initial_data.c_red_neg_r
-        values[Int(c_ox_pos_r)] = initial_data.c_ox_pos_r
-        values[Int(c_red_pos_r)] = initial_data.c_red_pos_r
-        if non_isothermal
-            values[Int(temp_r)] = initial_data.temp_r
-        end
-    end
-    if region == Int(domain_id_cc_pos) # positive current collector
-        values[Int(ϕₛ_r)] = initial_data.ϕₛ_r
-        if non_isothermal
-            values[Int(temp_r)] = initial_data.temp_r
-        end
+    # separator interface boundary
+    if region == data.bnd[:sep] && non_isothermal
+        values[data.idx[region].temp] = initial_data[region].temp
     end
 end

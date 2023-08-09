@@ -1,54 +1,70 @@
-function domain_symbols(non_isothermal=false)
+function domain_symbols()
     return [:cc_neg, :el_neg, :el_pos, :cc_pos, :sep]
 end
 
-function domain_id(domain_sym)
-    if domain_sym == :cc_neg
-        return 1
-    elseif domain_sym == :el_neg
-        return 2
-    elseif domain_sym == :el_pos
-        return 3
-    elseif domain_sym == :cc_pos
-        return 4
-    elseif domain_sym == :sep
-        return 5
-    end
-    @assert false "unknown domain symbol used"
-end
+# domain_id(::StaticSymbol{:cc_neg}) = 1
+# domain_id(::StaticSymbol{:el_neg}) = 2
+# domain_id(::StaticSymbol{:el_pos}) = 3
+# domain_id(::StaticSymbol{:cc_pos}) = 4
+# domain_id(::StaticSymbol{:sep}) = 5
 
-function boundary_id(adjacent_domains::Tuple{Symbol,Symbol})
-    if adjacent_domains == (:cc_neg, :el_neg)
-        return 7
-    elseif adjacent_domains == (:el_neg, :el_pos)
-        return 5
-    elseif adjacent_domains == (:el_pos, :cc_pos)
-        return 8
-    end
-    @assert false "unknown adjacent_domains"
-end
+# function domain_id(domain_sym::Symbol)
+#     if domain_sym == :cc_neg
+#         return 1
+#     elseif domain_sym == :el_neg
+#         return 2
+#     elseif domain_sym == :el_pos
+#         return 3
+#     elseif domain_sym == :cc_pos
+#         return 4
+#     elseif domain_sym == :sep
+#         return 5
+#     end
+#     @assert false "unknown domain symbol used"
+# end
 
-function boundary_id(boundary::Symbol) # FIXME: Optimize
-    if boundary == :cc_neg_left
-        return 6
-    elseif boundary == :cc_neg_el_neg
-        return 7
-    elseif boundary == :sep
-        return 5
-    elseif boundary == :el_pos_cc_pos
-        return 8
-    elseif boundary == :cc_pos_right
-        return 9
-    elseif boundary == :el_neg_inflow
-        return 10
-    elseif boundary == :el_neg_outflow
-        return 11
-    elseif boundary == :el_pos_inflow
-        return 12
-    elseif boundary == :el_pos_outflow
-        return 13
-    end
-end
+# function boundary_id(adjacent_domains::Tuple{Symbol,Symbol})
+#     if adjacent_domains == (:cc_neg, :el_neg)
+#         return 7
+#     elseif adjacent_domains == (:el_neg, :el_pos)
+#         return 5
+#     elseif adjacent_domains == (:el_pos, :cc_pos)
+#         return 8
+#     end
+#     @assert false "unknown adjacent_domains"
+# end
+
+# boundary_id(::StaticSymbol{:cc_neg_left}) = 6
+# boundary_id(::StaticSymbol{:cc_neg_el_neg}) = 7
+# boundary_id(::StaticSymbol{:sep}) = 5
+# boundary_id(::StaticSymbol{:el_pos_cc_pos}) = 8
+# boundary_id(::StaticSymbol{:cc_pos_right}) = 9
+# boundary_id(::StaticSymbol{:el_neg_inflow}) = 10
+# boundary_id(::StaticSymbol{:el_neg_outflow}) = 11
+# boundary_id(::StaticSymbol{:el_pos_inflow}) = 12
+# boundary_id(::StaticSymbol{:el_pos_outflow}) = 13
+
+# function boundary_id(boundary::Symbol) # FIXME: Optimize
+#     if boundary == :cc_neg_left
+#         return 6
+#     elseif boundary == :cc_neg_el_neg
+#         return 7
+#     elseif boundary == :sep
+#         return 5
+#     elseif boundary == :el_pos_cc_pos
+#         return 8
+#     elseif boundary == :cc_pos_right
+#         return 9
+#     elseif boundary == :el_neg_inflow
+#         return 10
+#     elseif boundary == :el_neg_outflow
+#         return 11
+#     elseif boundary == :el_pos_inflow
+#         return 12
+#     elseif boundary == :el_pos_outflow
+#         return 13
+#     end
+# end
 
 variable_symbols() = [:p, :ϕₛ, :ϕₗ, :c, :temp]
 variable_symbols(num_species) = vcat([:p, :ϕₛ, :ϕₗ], fill(:c, num_species), :temp)
@@ -75,12 +91,12 @@ function variable_continuity()
 end
 
 function domain_definitions_table(num_species, non_isothermal=true)
-    domains = domain_symbols(non_isothermal)
+    domains = domain_symbols()
     num_domains = length(domains)
     variables = variable_symbols(num_species)
     num_variables = length(variables)
 
-    enabled_variables = AxisArray(zeros(Bool, num_variables, num_domains),
+    enabled_variables = KeyedArray(zeros(Bool, num_variables, num_domains),
                                         rows=variables, cols=domains)
 
     sym2idx = variable_symbol_to_indices(num_species)
@@ -88,7 +104,7 @@ function domain_definitions_table(num_species, non_isothermal=true)
 
     for var in variables
         subdomains = var_dom_def[var]
-        @view(enabled_variables[rows=sym2idx[var], cols=subdomains]) .= true
+        @view(enabled_variables[rows=sym2idx[var], cols=Key(subdomains)]) .= true
     end
 
     return enabled_variables
@@ -96,16 +112,15 @@ end
 
 function subdomain_variable_indices(domain_def, non_isothermal)
     (num_variables, num_domains) = size(domain_def)
-    subdomain_var_idx = AxisArray(zeros(Int64, num_variables, num_domains),
-                                 rows=AxisArrays.axes(domain_def)[1],
-                                 cols=AxisArrays.axes(domain_def)[2])
+    subdomain_var_idx = KeyedArray(zeros(Int64, num_variables, num_domains),
+                                   rows=domain_def.rows, cols=domain_def.cols)
 
     # vector indicating whether the variables on subdomain at index i are discontinuous
     # from the variables on subdomain at index i-1
     var_discontinuity = zeros(Bool, num_domains)
     var_discontinuity[1] = false
     var_continuity = variable_continuity()
-    domains = domain_symbols(non_isothermal)
+    domains = domain_symbols()
     for idx_subdomain in 1:length(domains)-1
         var_discontinuity[idx_subdomain+1] = !var_continuity[(domains[idx_subdomain],
                                                               domains[idx_subdomain+1])]
@@ -123,7 +138,7 @@ end
 
 function subdomain_variable_id_to_domain_ids(subdomain_var_idx_table)
     dict_var_id_to_domain_ids = Dict()
-    domain_ids = AxisArrays.axes(subdomain_var_idx_table)[2]
+    domain_ids = subdomain_var_idx_table.cols
     (num_rows, num_cols) = size(subdomain_var_idx_table)
     for idx_row in 1:num_rows
         row = @view(subdomain_var_idx_table[rows=idx_row])

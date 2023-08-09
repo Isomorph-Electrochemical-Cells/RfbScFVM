@@ -106,27 +106,28 @@
         },
         "electrolyte": {
             "species": [
-                {"name": "ox_neg", 
+                {"name": "MV^{2+}", 
                  "charge": {"value": 2.0, "unit": "NoUnits"},
                  "molar_mass": {"value": 186.3, "unit": "g/mol"},
                  "diffusivity": {"value": 5.7e-6, "unit": "cm^2/s"}},
-                {"name": "red_neg", 
+                {"name": "MV^+", 
                 "charge": {"value": 1.0, "unit": "NoUnits"},
                 "molar_mass": {"value": 186.3, "unit": "g/mol"},
                 "diffusivity": {"value": 5.7e-6, "unit": "cm^2/s"}},
-                {"name": "ox_pos", 
+                {"name": "T^{2+}", 
                 "charge":  {"value": 2.0, "unit": "NoUnits"},
                 "molar_mass": {"value": 214.4, "unit": "g/mol"},
                 "diffusivity": {"value": 4.8e-6, "unit": "cm^2/s"}},
-                {"name": "red_pos", 
+                {"name": "T^+", 
                 "charge": {"value": 1.0, "unit": "NoUnits"},
                 "molar_mass": {"value": 214.4, "unit": "g/mol"}, 
                 "diffusivity": {"value": 4.8e-6, "unit": "cm^2/s"}},
-                {"name": "counter", 
+                {"name": "Cl^-", 
                 "charge": {"value": -1.0, "unit": "NoUnits"},
                 "molar_mass": {"value": 35.45, "unit": "g/mol"}, 
                 "diffusivity": {"value": 2e-5, "unit": "cm^2/s"}}
             ],
+            "electroneutrality": {"name": "Cl^-"},
             "thermal_conductivity": {"value": 0.67, "unit": "W/m/K"},
             "thermal_vol_capacity": {"value": 4.19e+6, "unit": "J/m^3/K"}
         }
@@ -140,23 +141,23 @@
         "voltage_neg": {"value": -0.66, "unit": "V"},
         "voltage_pos": {"value": 0.62, "unit": "V"},
         "electrode_neg": {
-            "species": [{"name": "ox_neg", 
+            "species": [{"name": "MV^{2+}", 
                          "concentration": {"value": 1.01, "unit": "mol/l"}},
-                        {"name": "red_neg", 
+                        {"name": "MV^+", 
                         "concentration": {"value": 0.606, "unit": "mol/l"}},
-                        {"name": "ox_pos", 
+                        {"name": "T^{2+}", 
                         "concentration": {"value": 0.0, "unit": "mol/l"}},
-                        {"name": "red_pos", 
+                        {"name": "T^+", 
                         "concentration": {"value": 0.0, "unit": "mol/l"}}]
         },
         "electrode_pos": {
-            "species": [{"name": "ox_neg", 
+            "species": [{"name": "MV^{2+}", 
                         "concentration": {"value": 0.0, "unit": "mol/l"}},
-                        {"name": "red_neg", 
+                        {"name": "MV^+", 
                         "concentration": {"value": 0.0, "unit": "mol/l"}},
-                        {"name": "ox_pos", 
+                        {"name": "T^{2+}", 
                          "concentration": {"value": 0.522, "unit": "mol/l"}},
-                        {"name": "red_pos",
+                        {"name": "T^+",
                         "concentration": {"value": 0.522, "unit": "mol/l"}}]
         }
     },
@@ -179,10 +180,12 @@
     "study_parameters": {
         "polarization": {
             "voltage_start": "ocv",
-            "voltage_stop": {"value": 0.9, "unit": "V"},
-            "voltage_step": {"value": -0.04, "unit": "V"},
-            "output_folder": "output"
+            "voltage_stop": {"value": 1.0, "unit": "V"},
+            "voltage_step": {"value": -0.05, "unit": "V"}
         },
+        "output_folder": "output_nonisothermal",
+        "output_file_name": "results.json",
+        "generate_figures": true,
         "non_isothermal": true,
         "migration": true
     }

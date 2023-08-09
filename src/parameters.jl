@@ -1,24 +1,26 @@
-@with_kw struct CurrentCollectorParameters{T}
+@kwdef struct CurrentCollectorParameters{T<:AbstractFloat}
     σₑ::T # electric conductivity
     hₜ::T # heat transfer coefficient
     λₜ::T # thermal conductivity
     cpᵥ::T # volumetric thermal capacity
 end
 
-@with_kw struct ReactionParameters{T}
+@kwdef struct ReactionParameters{T<:AbstractFloat, NSPEC}
     name::String = "" # name of reaction
     Δs::T = 0.0 # entropy change
     α::T = 0.5 # symmetry coefficient
     ki::T = 0.0 # kinetic number
     ∂Δϕ₀_∂temp::T = 0.0 # temperature dependence of ki
-    temp_ref::T = 0.0 # reference temperature of ki and Δϕ₀
-    ν_ox::Int64 = -1 # stoichiometric coefficient of the oxidized ion
-    ν_red::Int64 = 1 # stoichiometric coefficient of the reduced ion
-    ν_el::Int64 = -1 # stoichiometric coefficient of the transferred electrons
-    Δϕ₀::T = 0.0 # (formal) standard reduction potential
+    temp_ref::T = 1.0 # reference temperature of ki and Δϕ₀
+    ν_el::IndexType # number of exchanged electrons (absolute value)
+    # stoichiometric coefficients of species in the electrolyte participating in the reaction
+    ν_coeff::SVector{NSPEC, IndexType} = SVector{NSPEC, IndexType}(zeros(IndexType, NSPEC))
+    idx_ox::IndexType # index of oxidized species in ν_coeff
+    idx_red::IndexType # index of reduced species in ν_coeff
+    Δϕ₀::T # (formal) standard reduction potential
 end
 
-@with_kw struct ElectrodeParameters{T}
+@kwdef struct ElectrodeParameters{T<:AbstractFloat, NSPEC}
     λₜ::T # thermal conductivity
     cpᵥ::T # thermal volumetric capacity
     εₗ::T # electrolyte volume fraction (porosity)
@@ -32,10 +34,10 @@ end
     Deff_quadratic::T # quadratic dependency of mechanical dispersion on velocity
     sh_factor::T # pre-factor of the mass-transfer model
     sh_exponent::T # exponent of the mass-transfer model
-    reactions::ReactionParameters{T}
+    reactions::ReactionParameters{T, NSPEC}
 end
 
-@with_kw struct SeparatorParameters{T}
+@kwdef struct SeparatorParameters{T<:AbstractFloat}
     λₜ::T # thermal conductivity
     cpᵥ::T # thermal volumetric capacity
     μ::T # dynamic viscosity
@@ -48,37 +50,36 @@ end
     zf::T # charge value of fixed ionic groups
 end
 
-@with_kw struct BoundaryConditions{T}
-    species_neg::AxisArray{T, 2, Matrix{T}, Tuple{AxisArrays.Axis{:row, Vector{String}}, AxisArrays.Axis{:col, Vector{String}}}} =
-    AxisArray(Matrix{T}(undef,5,1);
-            row=["solvent", "ox_neg", "red_neg", "ox_pos", "red_pos"],
-            col=["concentration"])
-    species_pos::AxisArray{T, 2, Matrix{T}, Tuple{AxisArrays.Axis{:row, Vector{String}}, AxisArrays.Axis{:col, Vector{String}}}} =
-            AxisArray(Matrix{T}(undef,5,1);
-                    row=["solvent", "ox_neg", "red_neg", "ox_pos", "red_pos"],
-                    col=["concentration"])
+@kwdef struct BoundaryConditions{T<:AbstractFloat, NSPEC}
+    # species_neg::SVector{NSPEC, T}
+    # species_pos::SVector{NSPEC, T}
+    species_neg::KeyedArray{T, 1, NamedDimsArray{(:row,), T, 1, SVector{NSPEC, T}}, Base.RefValue{Vector{String}}} # inlet concentrations in negative electrode
+    species_pos::KeyedArray{T, 1, NamedDimsArray{(:row,), T, 1, SVector{NSPEC, T}}, Base.RefValue{Vector{String}}} # inlet concentrations in positive electrode
     temp_amb::T # ambient temperature
     p_in_neg::T # electrolyte pressure at inlet in negative electrode
     p_in_pos::T # electrolyte pressure at inlet in positive electrode
     v_out_neg::T #TODO: add support for outlet pressure
     v_out_pos::T #TODO: add support for outlet pressure
-    ϕₛ_neg::T # applied electrostatic potential at negative electrode
-    ϕₛ_pos::T # applied electrostatic potential at positive electrode
+    ϕₛ_neg::Base.RefValue{T} # applied electrostatic potential at negative electrode
+    ϕₛ_pos::Base.RefValue{T} # applied electrostatic potential at positive electrode
 end
 
-@with_kw struct PolarizationParameters{T}
+@kwdef struct PolarizationParameters{T<:AbstractFloat}
     voltage_start::T
     voltage_stop::T
     voltage_step::T
-    output_folder::String
 end
-@with_kw struct StudyParameters{T}
+
+@kwdef struct StudyParameters{T<:AbstractFloat}
     polarization::PolarizationParameters{T}
     non_isothermal::Bool
     migration::Bool
+    output_folder::String
+    output_file_name::String
+    generate_figures::Bool
 end
 
-@with_kw struct CharacteristicScales{T}
+@kwdef struct CharacteristicScales{T<:AbstractFloat}
     TEMP0::Unitful.Temperature{T} = T(273.15+25.0)u"K" # reference temperature [K]
     L0::Unitful.Length{T} = T(1e-2)*u"m" # default reference macroscopic length [m]
     LP0::Unitful.Length{T} = T(1e-5)*u"m" # reference pore-scale length [m]
@@ -107,7 +108,7 @@ end
     K0::HeterogeneousReactionRate{T} = upreferred(D0/LP0) # reference heterogeneous reaction rate [m/s]
 end
 
-@with_kw struct ScalingParameters{T}
+@kwdef struct ScalingParameters{T<:AbstractFloat}
     ϵL0::T # ratio of pore-scale length to macroscopic length scale
     ϵl0::T # ratio of double layer length scale to pore-scale length
     PR0::T # Prandtl number
@@ -118,13 +119,13 @@ end
     LE0::T # Lewis number
 end
 
-@with_kw struct DiscretizationParameters{T}
+@kwdef struct DiscretizationParameters{T<:AbstractFloat}
     spatial_discretization::String
     temporal_discretization::String
     relative_tolerance::T
 end
 
-function ScalingParameters{T}(scales::CharacteristicScales{T}) where T
+function ScalingParameters{T}(scales::CharacteristicScales{T}) where {T<:AbstractFloat}
     ϵL0::T = scales.LP0 / scales.L0 |> NoUnits # ratio of pore-scale length to macroscopic length
     ϵl0::T = scales.LDL0 / scales.LP0 |> NoUnits # ratio of pore-scale length to macroscopic length
     PR0::T = (scales.μ0 * scales.CP0) / (scales.λ0) |> NoUnits # Prandtl number
@@ -137,37 +138,45 @@ function ScalingParameters{T}(scales::CharacteristicScales{T}) where T
                                KI0=KI0, PE0=PE0, LE0=LE0)
 end
 
-
-@with_kw struct ElectrolyteParams{T}
-    species::AxisArray{T, 2, Matrix{T}, Tuple{AxisArrays.Axis{:row, Vector{String}}, AxisArrays.Axis{:col, Vector{String}}}} =
-            AxisArray(Matrix{T}(undef, 6, 4);
-                    row=["solvent", "ox_neg", "red_neg", "ox_pos", "red_pos", "counter"],
-                    col=["charge", "molar_mass", "diffusivity"])
+@kwdef struct ElectrolyteParams{T<:AbstractFloat, NSPEC, NATTR, NSPEC_TIMES_NATTR}
+    # Electrolyte species without the counter species
+    species::KeyedArray{T, 2, NamedDimsArray{(:row, :col), T, 2, MMatrix{NSPEC, NATTR, T, NSPEC_TIMES_NATTR}}, Tuple{Vector{String}, Vector{String}}}
+    # Counter species, whose concentration is determined by the strong electroneurality condition
+    counter::KeyedArray{T, 1, NamedDimsArray{(:col,), T, 1, MVector{NATTR, T}}, Base.RefValue{Vector{String}}}
     λₜ::T # thermal conductivity
     cpᵥ::T # thermal volumetric capacity
 end
 
-
-@with_kw struct ModelParameters{T, NamedTupleType}
-    geom::FlowCellGeometry2D{T}
-    el_neg::ElectrodeParameters{T}
-    el_pos::ElectrodeParameters{T}
-    cc_neg::CurrentCollectorParameters{T}
-    cc_pos::CurrentCollectorParameters{T}
-    sep::SeparatorParameters{T}
-    boundary::BoundaryConditions{T}
-    discr::DiscretizationParameters{T}
-    study::StudyParameters{T}
-    scales::CharacteristicScales{T}
-    scaling_params::ScalingParameters{T}
-    electrolyte::ElectrolyteParams{T}
-    var::NamedTupleType
+@kwdef mutable struct SystemResults{T<:AbstractFloat}
+    current_density::Vector{T} = Vector{T}(undef,0)
 end
 
-@with_kw struct DomainVariables{T<:Integer, ArrayType}
+
+@kwdef struct DomainVariables{T<:Real, ArrayType<:AbstractArray}
     p::T
     ϕₛ::T
     ϕₗ::T
     c::ArrayType
     temp::T
+end
+
+@kwdef struct ModelParameters{T<:AbstractFloat, NSPEC, NSPEC_SYSTEM, NATTR, NSPEC_TIMES_NATTR,
+              NAMED_TUPLE_TYPE, DOMAIN_ID_TYPE, BOUNDARY_ID_TYPE}
+    geom::FlowCellGeometry{T}
+    mesh::Mesh2D{T}
+    el_neg::ElectrodeParameters{T, NSPEC}
+    el_pos::ElectrodeParameters{T, NSPEC}
+    cc_neg::CurrentCollectorParameters{T}
+    cc_pos::CurrentCollectorParameters{T}
+    sep::SeparatorParameters{T}
+    boundary::BoundaryConditions{T, NSPEC_SYSTEM}
+    discr::DiscretizationParameters{T}
+    study::StudyParameters{T}
+    scales::CharacteristicScales{T}
+    scaling_params::ScalingParameters{T}
+    electrolyte::ElectrolyteParams{T, NSPEC_SYSTEM, NATTR, NSPEC_TIMES_NATTR}
+    idx::NAMED_TUPLE_TYPE
+    results::SystemResults{T}
+    dom::DOMAIN_ID_TYPE
+    bnd::BOUNDARY_ID_TYPE
 end

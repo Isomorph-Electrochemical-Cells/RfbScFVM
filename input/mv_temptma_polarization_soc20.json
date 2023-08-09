@@ -127,6 +127,7 @@
                 "molar_mass": {"value": 35.45, "unit": "g/mol"},
                 "diffusivity": {"value": 2e-5, "unit": "cm^2/s"}}
             ],
+            "electroneutrality": {"name": "Cl^-"},
             "thermal_conductivity": {"value": 0.67, "unit": "W/m/K"},
             "thermal_vol_capacity": {"value": 4.19e+6, "unit": "J/m^3/K"}
         }

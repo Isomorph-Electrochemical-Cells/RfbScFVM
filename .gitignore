@@ -28,3 +28,6 @@ docs/site/
  
 # All files in the output folder
 output/*
+
+# Settings of the vs-code editor
+.vscode/*

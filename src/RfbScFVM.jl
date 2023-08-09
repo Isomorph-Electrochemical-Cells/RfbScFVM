@@ -1,20 +1,20 @@
 module RfbScFVM
 
-using AxisArrays
-using Printf
-using JSON
-using FillArrays
-using Parameters
-using VoronoiFVM
-using ExtendableGrids
-using GridVisualize
-using LaTeXStrings
-using Unitful
-using DataFrames
-using Tables
+using AxisKeys
 using CSV
+using DataFrames
+using ExtendableGrids
+using FillArrays
+using GridVisualize
+using JSON
+using LaTeXStrings
 using Makie, CairoMakie, GLMakie
-using Infiltrator
+using PrecompileTools
+using Printf
+using StaticArrays
+using Tables
+using VoronoiFVM
+using Unitful
 
 include("constants.jl")
 include("units.jl")
@@ -26,28 +26,42 @@ include("kinetics.jl")
 include("input.jl")
 include("flux.jl")
 include("subgrid_scale_models.jl")
-include("physics.jl")
+include("physics_common.jl")
+include("physics_1d.jl")
+include("physics_2d.jl")
 include("system.jl")
 include("solver.jl")
 include("study.jl")
 include("postprocessing.jl")
+include("output.jl")
 include("run.jl")
 
-export flow_cell_geometry_2D
+
+export flow_cell_geometry
 export create_grid_2d
-export physics
 export system
 export initial_condition
 export cell_thickness
 export solve_steady_state_problem, solve_transient_problem
 export plot_all_fields_2d, plot_all_fields_1d
 export read_simulation_parameters
-export project_solution, project_solutions, combined_solution_fields_1d
 export ReactionParameters
-export update_physics_data
 export integrate_reaction_terms
 export plot_polarization_curve
 export volumetric_current_density
 export ϕ_eq
+export gridplot
+
+@setup_workload begin
+    # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the
+    # precompile file and potentially make loading faster.
+    # TODO
+    @compile_workload begin
+        # all calls in this block will be precompiled, regardless of whether
+        # they belong to your package or not (on Julia 1.8 and higher)
+        # TODO
+    end
+end
+
 
 end # module RfbScFVM
