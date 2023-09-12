@@ -2,7 +2,6 @@ module TestPressureDrivenFlow
 
 using RfbScFVM
 using Test
-using PyPlot
 
 
 function run_system(dict_input_data)
@@ -16,9 +15,9 @@ function run_system(dict_input_data)
         (grid, subgrids) = create_grid_1d(data.geom, data.mesh, data.dom, data.bnd)
     end
 
-    vis = plot_grid(grid; plotter=PyPlot);
-    output_path_figures = ""
-    save(joinpath(output_path_figures, "grid.png"), vis)
+    # vis = plot_grid(grid; plotter=CairoMakie);
+    # output_path_figures = ""
+    # save(joinpath(output_path_figures, "grid.png"), vis)
 
     ocv = run_ocv(data)
 

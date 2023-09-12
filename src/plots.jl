@@ -112,7 +112,6 @@ end
 
 
 function plot_all_fields_1d(solution, grid, subgrids, data)
-    #GLMakie.activate!()
     CairoMakie.activate!()
 
     figures = Dict{String, Makie.Figure}()
@@ -504,9 +503,7 @@ function line_plot_1d(sol, coords; labels=[""], axis_kwargs=axis_kwargs)
 end
 
 function plot_all_fields_2d(solution, grid, subgrids, data)
-    #GLMakie.activate!()
     CairoMakie.activate!()
-
 
     dict_figures = Dict{String, Makie.Figure}()
 

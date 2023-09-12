@@ -16,7 +16,11 @@ end
 
 # ╔═╡ 77f26554-1a7c-11ee-2353-5b8000f42f71
 begin
-	using Revise
+	try
+		using Revise
+	catch
+		@info "Not using Revise"
+	end
 	
     import Pkg
     # activate the shared project environment
@@ -24,12 +28,12 @@ begin
     # instantiate, i.e. make sure that all packages are downloaded
     Pkg.instantiate()
 
+	import CairoMakie
 	using RfbScFVM
 	using PlutoVista
 	using PlutoUI
 	import PlutoUI: combine
 	using GridVisualize
-	import GLMakie, CairoMakie
 	using Unitful
 	using HypertextLiteral: @htl, @htl_str
 	using LaTeXStrings

@@ -12,11 +12,10 @@ using JSON
 using LaTeXStrings
 using LinearAlgebra
 using Logging
-using CairoMakie, GLMakie
+using CairoMakie
 using NonlinearSolve
 using PrecompileTools
 using Printf
-using PyPlot
 using SparseArrays
 using StaticArrays
 using Tables

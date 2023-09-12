@@ -181,7 +181,7 @@ function run(input_file_path)
         output_path = data.study.output_folder
         mkpath(output_path)
         output_path_figures = joinpath(pwd(), output_path)
-        vis = plot_grid(grid; plotter=PyPlot);
+        vis = plot_grid(grid; plotter=CairoMakie);
         save(joinpath(output_path_figures, "grid.png"), vis)
     end
 

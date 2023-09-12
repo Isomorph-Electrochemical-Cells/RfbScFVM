@@ -15,7 +15,7 @@ function run_system(dict_input_data)
         (grid, subgrids) = create_grid_1d(data.geom, data.mesh, data.dom, data.bnd)
     end
 
-    # vis = plot_grid(grid; plotter=PyPlot);
+    # vis = plot_grid(grid; plotter=CairoMakie);
     # output_path_figures = ""
     # save(joinpath(output_path_figures, "grid.png"), vis)
 
