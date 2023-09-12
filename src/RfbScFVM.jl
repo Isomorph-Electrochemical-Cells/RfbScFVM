@@ -1,16 +1,23 @@
 module RfbScFVM
 
 using AxisKeys
+import Base.show
 using CSV
-using DataFrames
 using ExtendableGrids
+using FastGaussQuadrature
 using FillArrays
 using GridVisualize
+import GridVisualize: save
 using JSON
 using LaTeXStrings
-using Makie, CairoMakie, GLMakie
+using LinearAlgebra
+using Logging
+using CairoMakie, GLMakie
+using NonlinearSolve
 using PrecompileTools
 using Printf
+using PyPlot
+using SparseArrays
 using StaticArrays
 using Tables
 using VoronoiFVM
@@ -31,11 +38,23 @@ include("physics_1d.jl")
 include("physics_2d.jl")
 include("system.jl")
 include("solver.jl")
-include("study.jl")
-include("postprocessing.jl")
+include("plots.jl")
 include("output.jl")
 include("run.jl")
 
+
+export read_config_file
+export preprocess_parameters
+export plot_grid
+export create_grid_1d
+export create_grid_2d
+export save, save_results
+export run_ocv
+export run_polarization
+export postprocess_results
+export unitful_to_dict
+export dimensional
+export project_solutions
 
 export flow_cell_geometry
 export create_grid_2d
@@ -44,13 +63,13 @@ export initial_condition
 export cell_thickness
 export solve_steady_state_problem, solve_transient_problem
 export plot_all_fields_2d, plot_all_fields_1d
-export read_simulation_parameters
 export ReactionParameters
 export integrate_reaction_terms
 export plot_polarization_curve
 export volumetric_current_density
 export ϕ_eq
-export gridplot
+export donnan_equilibrium_concentrations!
+export donnan_equlibrium_potential
 
 @setup_workload begin
     # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the

@@ -7,18 +7,28 @@
     ly_cell::T
 end
 
-@kwdef struct Mesh1D{T}
+abstract type AbstractMeshType{T} end
+
+@kwdef struct Mesh1D{T<:AbstractFloat} <: AbstractMeshType{T}
     hx_cc_neg::Vector{T}
     hx_el_neg::Vector{T}
     hx_el_pos::Vector{T}
     hx_cc_pos::Vector{T}
 end
-@kwdef struct Mesh2D{T}
+
+@kwdef struct Mesh2D{T<:AbstractFloat} <: AbstractMeshType{T}
     hx_cc_neg::Vector{T}
     hx_el_neg::Vector{T}
     hx_el_pos::Vector{T}
     hx_cc_pos::Vector{T}
     hy_cell::Vector{T}
+end
+
+function Mesh1D(mesh2d::Mesh2D{T}) where {T}
+    Mesh1D(hx_cc_neg=mesh2d.hx_cc_neg,
+           hx_el_neg=mesh2d.hx_el_neg,
+           hx_el_pos=mesh2d.hx_el_pos,
+           hx_cc_pos=mesh2d.hx_cc_pos)
 end
 
 function mesh_1d(geom::FlowCellGeometry{T};
@@ -27,7 +37,7 @@ function mesh_1d(geom::FlowCellGeometry{T};
     hx_el_neg=[geom.lx_el_neg/8, geom.lx_el_neg/4, geom.lx_el_neg/32],
     hx_el_pos=[geom.lx_el_pos/32, geom.lx_el_pos/4, geom.lx_el_pos/8]) where T<:AbstractFloat
 
-    Mesh1D(hx_cc_neg=hx_cc_neg, hx_cc_pos=hx_cc_pos,
+    Mesh1D{T}(hx_cc_neg=hx_cc_neg, hx_cc_pos=hx_cc_pos,
            hx_el_neg=hx_el_neg, hx_el_pos=hx_el_pos)
 end
 
@@ -38,7 +48,7 @@ function mesh_2d(geom::FlowCellGeometry{T};
     hx_el_pos=[geom.lx_el_pos/32, geom.lx_el_pos/4, geom.lx_el_pos/8],
     hy_cell=[geom.ly_cell/128, geom.ly_cell/128, geom.ly_cell/128]) where T<:AbstractFloat
 
-    Mesh2D(hx_cc_neg=hx_cc_neg, hx_cc_pos=hx_cc_pos,
+    Mesh2D{T}(hx_cc_neg=hx_cc_neg, hx_cc_pos=hx_cc_pos,
            hx_el_neg=hx_el_neg, hx_el_pos=hx_el_pos, hy_cell=hy_cell)
 end
 

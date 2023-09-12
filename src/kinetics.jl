@@ -39,8 +39,6 @@ function volumetric_current_density(r::ReactionParameters{T, NSPEC},
         # volumetric current density
         iv = aᵥ*n*c_ox_b*KI0*ki*(exp(n*ηb/temp)-1) / ((1+cr*exp(n*ηb/temp))*ki/sh +
                                                         (cr^r.α)*exp(n*r.α*ηb/temp))
-
-        @assert !isnan(iv) # FIXME: REMOVE THIS CHECK
     end
     return iv
 end
@@ -79,13 +77,50 @@ function volumetric_current_density(r::ReactionParameters{T,NSPEC},
 end
 
 
-function ϕ_eq(r::ReactionParameters{T, NSPEC}, u, idx_c2u, temp) where {T, NSPEC}
+# function ϕ_eq(r::ReactionParameters{T, NSPEC}, u, idx_c2u, temp) where {T, NSPEC}
+#     reaction_quotient = one(T)
+#     for idx in eachindex(r.ν_coeff) # TODO: Handle case, where counter species is involved in reaction!
+#         if r.ν_coeff[idx] == zero(Int64)
+#             continue
+#         end
+#         reaction_quotient *= u[idx_c2u[idx]]^r.ν_coeff[idx]
+#     end
+#     r.Δϕ₀ + temp * (one(T)/r.ν_el) * log(reaction_quotient)
+# end
+
+function ϕ_eq(r::ReactionParameters{T, NSPEC}, c_fun, temp) where {T, NSPEC}
     reaction_quotient = one(T)
-    for idx in eachindex(r.ν_coeff) # TODO: Handle case, where counter species is involved in reaction!
+    for idx in 1:NSPEC
         if r.ν_coeff[idx] == zero(Int64)
             continue
         end
-        reaction_quotient *= u[idx_c2u[idx]]^r.ν_coeff[idx]
+        reaction_quotient *= c_fun(idx)^r.ν_coeff[idx]
     end
-    r.Δϕ₀ + temp * (one(T)/r.ν_el) * log(reaction_quotient)
+    if (reaction_quotient < - SQRT_EPS)
+        @warn "negative reaction quotient" Float64(reaction_quotient)
+    end
+
+    r.Δϕ₀ + temp * (one(T)/r.ν_el) * log(abs(reaction_quotient) + eps(reaction_quotient))
+end
+
+function ϕ_eq(vec_r::VECTOR_REACTION_PARAMETERS, c_fun, temp) where {T, NSPEC, VECTOR_REACTION_PARAMETERS <: AbstractVector{ReactionParameters{T, NSPEC}}}
+    ϕ_eq_result = zero(T)
+    num_electrons = zero(Int64)
+    for r in vec_r
+        reaction_quotient = one(T)
+        for idx in 1:NSPEC
+            if r.ν_coeff[idx] == zero(Int64)
+                continue
+            end
+            reaction_quotient *= c_fun(idx)^r.ν_coeff[idx]
+        end
+        num_electrons += r.ν_el
+
+        if (reaction_quotient < - SQRT_EPS)
+            @warn "negative reaction quotient" Float64(reaction_quotient)
+        end
+
+        ϕ_eq_result += r.ν_el * r.Δϕ₀ + temp * log(abs(reaction_quotient) + eps(reaction_quotient))
+    end
+    ϕ_eq_result /= num_electrons
 end

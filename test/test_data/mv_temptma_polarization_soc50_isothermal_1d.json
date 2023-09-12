@@ -18,7 +18,7 @@
         "electrode_neg": {
             "thermal_conductivity": {"value": 0.15, "unit": "W/m/K"},
             "thermal_vol_capacity": {"value": 3.33e+5, "unit": "J/m^3/K"},
-            "porosity": {"value": 0.8, "unit": "NoUnits"},
+            "porosity": {"value": 0.68, "unit": "NoUnits"},
             "mass_transfer_model": {"mass_transfer_factor": {"value": 1e-4, "unit": "(m/s)^(1//10)"},
                                     "mass_transfer_exponent": {"value": 0.9, "unit": "NoUnits"}},
             "hydraulic_permeability": {"value": 1e-11, "unit": "m^2"},
@@ -33,9 +33,9 @@
             "reactions": [
                 {
                     "name": "redox_neg",
-                    "stoichiometric_coefficients": [{"name": "ox", "nu": -1},
+                    "stoichiometric_coefficients": [{"name": "MV^{2+}", "nu": -1, "state": "ox"},
                                                     {"name": "e", "nu": -1},
-                                                    {"name": "red", "nu": 1}],
+                                                    {"name": "MV^+", "nu": 1, "state": "red"}],
                     "standard_reduction_potential": {
                         "standard_value": {"value": -0.66, "unit": "V"},
                         "temperature_coefficient": {"value": 0.0, "unit": "V/K"}
@@ -53,20 +53,37 @@
             "thermal_conductivity": {"value": 0.67, "unit": "W/m/K"},
             "thermal_vol_capacity": {"value": 2.18e+6, "unit": "J/m^3/K"},
             "hydraulic_permeability": {"value": 1.58e-18, "unit": "m^2"},
-            "electrokinetic_permeability": {"value": 5.8e-21, "unit": "m^2"},
+            "electrokinetic_permeability": {"value": 0.0, "unit": "m^2"},
             "fixed_ionic_groups": {"concentration": {"value": 3.0, "unit": "mol/l"},
                                    "charge": {"value": 1, "unit": "NoUnits"}},
-            "electrical_conductivity": {
-                "reference_value": {"value": 5, "unit": "mS/cm"},
-                "temperature_coefficient": {"value": 0.1, "unit": "mS/cm/K"},
-                "reference_temperature": {"value": 298.15, "unit": "K"}
-            },
-            "dynamic_viscosity": {"value": 1, "unit": "mPa*s"}
+            "dynamic_viscosity": {"value": 1, "unit": "mPa*s"},
+            "species": [
+                {"name": "MV^{2+}", 
+                 "reference_diffusivity": {"value": 0.0, "unit": "cm^2/s"},
+                 "reference_temperature": {"value": 298.15, "unit": "K"},
+                 "temperature_coefficient": {"value": 0.005, "unit": "1/K"}},
+                {"name": "MV^+", 
+                "reference_diffusivity": {"value": 0.0, "unit": "cm^2/s"},
+                "reference_temperature": {"value": 298.15, "unit": "K"},
+                "temperature_coefficient": {"value": 0.005, "unit": "1/K"}},
+                {"name": "T^{2+}", 
+                "reference_diffusivity": {"value": 0.0, "unit": "cm^2/s"},
+                "reference_temperature": {"value": 298.15, "unit": "K"},
+                "temperature_coefficient": {"value": 0.005, "unit": "1/K"}},
+                {"name": "T^+", 
+                "reference_diffusivity": {"value": 0.0, "unit": "cm^2/s"},
+                "reference_temperature": {"value": 298.15, "unit": "K"},
+                "temperature_coefficient": {"value": 0.005, "unit": "1/K"}},
+                {"name": "Cl^-", 
+                "reference_diffusivity": {"value": 1e-6, "unit": "cm^2/s"},
+                "reference_temperature": {"value": 298.15, "unit": "K"},
+                "temperature_coefficient": {"value": 0.005, "unit": "1/K"}}
+            ]
         },
         "electrode_pos": {
             "thermal_conductivity": {"value": 0.15, "unit": "W/m/K"},
             "thermal_vol_capacity": {"value": 3.33e+5, "unit": "J/m^3/K"},
-            "porosity": {"value": 0.8, "unit": "NoUnits"},
+            "porosity": {"value": 0.68, "unit": "NoUnits"},
             "mass_transfer_model": {"mass_transfer_factor": {"value": 1e-4, "unit": "(m/s)^(1//10)"},
                                     "mass_transfer_exponent": {"value": 0.9, "unit": "NoUnits"}},
             "hydraulic_permeability": {"value": 1e-11, "unit": "m^2"},
@@ -81,9 +98,9 @@
             "reactions": [
                 {
                     "name": "redox_pos",
-                    "stoichiometric_coefficients": [{"name": "ox", "nu": -1},
+                    "stoichiometric_coefficients": [{"name": "T^{2+}", "nu": -1, "state": "ox"},
                                                     {"name": "e", "nu": -1},
-                                                    {"name": "red", "nu": 1}],
+                                                    {"name": "T^+", "nu": 1, "state": "red"}],
                     "standard_reduction_potential": {
                         "standard_value": {"value": 0.62, "unit": "V"},
                         "temperature_coefficient": {"value": 0.0, "unit": "V/K"}
@@ -106,28 +123,34 @@
         },
         "electrolyte": {
             "species": [
-                {"name": "ox_neg", 
+                {"name": "MV^{2+}", 
                  "charge": {"value": 2.0, "unit": "NoUnits"},
-                 "molar_mass": {"value": 186.3, "unit": "g/mol"},
-                 "diffusivity": {"value": 5.7e-6, "unit": "cm^2/s"}},
-                {"name": "red_neg", 
+                 "reference_diffusivity": {"value": 5.7e-6, "unit": "cm^2/s"},
+                 "reference_temperature": {"value": 298.15, "unit": "K"},
+                 "temperature_coefficient": {"value": 0.005, "unit": "1/K"}},
+                {"name": "MV^+", 
                 "charge": {"value": 1.0, "unit": "NoUnits"},
-                "molar_mass": {"value": 186.3, "unit": "g/mol"},
-                "diffusivity": {"value": 5.7e-6, "unit": "cm^2/s"}},
-                {"name": "ox_pos", 
+                "reference_diffusivity": {"value": 5.7e-6, "unit": "cm^2/s"},
+                "reference_temperature": {"value": 298.15, "unit": "K"},
+                "temperature_coefficient": {"value": 0.005, "unit": "1/K"}},
+                {"name": "T^{2+}", 
                 "charge":  {"value": 2.0, "unit": "NoUnits"},
-                "molar_mass": {"value": 214.4, "unit": "g/mol"},
-                "diffusivity": {"value": 4.8e-6, "unit": "cm^2/s"}},
-                {"name": "red_pos", 
+                "reference_diffusivity": {"value": 4.8e-6, "unit": "cm^2/s"},
+                "reference_temperature": {"value": 298.15, "unit": "K"},
+                "temperature_coefficient": {"value": 0.005, "unit": "1/K"}},
+                {"name": "T^+", 
                 "charge": {"value": 1.0, "unit": "NoUnits"},
-                "molar_mass": {"value": 214.4, "unit": "g/mol"}, 
-                "diffusivity": {"value": 4.8e-6, "unit": "cm^2/s"}},
-                {"name": "counter", 
+                "reference_diffusivity": {"value": 4.8e-6, "unit": "cm^2/s"},
+                "reference_temperature": {"value": 298.15, "unit": "K"},
+                "temperature_coefficient": {"value": 0.005, "unit": "1/K"}},
+                {"name": "Cl^-", 
                 "charge": {"value": -1.0, "unit": "NoUnits"},
-                "molar_mass": {"value": 35.45, "unit": "g/mol"},
-                "diffusivity": {"value": 2e-5, "unit": "cm^2/s"}}
+                "reference_diffusivity": {"value": 2e-5, "unit": "cm^2/s"},
+                "reference_temperature": {"value": 298.15, "unit": "K"},
+                "temperature_coefficient": {"value": 0.005, "unit": "1/K"}}
             ],
             "electroneutrality": {"name": "Cl^-"},
+            "homogeneous_reactions": [],
             "thermal_conductivity": {"value": 0.67, "unit": "W/m/K"},
             "thermal_vol_capacity": {"value": 4.19e+6, "unit": "J/m^3/K"}
         }
@@ -136,44 +159,38 @@
         "ambient_temperature": {"value": 298.15, "unit": "K"},
         "pressure_inlet_neg": {"value": 1e+5, "unit": "Pa"},
         "pressure_inlet_pos": {"value": 1e+5, "unit": "Pa"},
-        "velocity_outlet_neg": {"value": 3.73, "unit": "mm/s"},
-        "velocity_outlet_pos": {"value": 3.73, "unit": "mm/s"},
+        "velocity_outlet_neg": {"value": 3.0, "unit": "mm/s"},
+        "velocity_outlet_pos": {"value": 3.0, "unit": "mm/s"},
         "voltage_neg": {"value": -0.66, "unit": "V"},
         "voltage_pos": {"value": 0.62, "unit": "V"},
-        "electrode_neg": {
-            "species": [{"name": "ox_neg", 
-                         "concentration": {"value": 1.31, "unit": "mol/l"}},
-                        {"name": "red_neg", 
-                        "concentration": {"value": 0.231, "unit": "mol/l"}},
-                        {"name": "ox_pos", 
-                        "concentration": {"value": 0.0, "unit": "mol/l"}},
-                        {"name": "red_pos", 
-                        "concentration": {"value": 0.0, "unit": "mol/l"}}]
-        },
-        "electrode_pos": {
-            "species": [{"name": "ox_neg", 
-                        "concentration": {"value": 0.0, "unit": "mol/l"}},
-                        {"name": "red_neg", 
-                        "concentration": {"value": 0.0, "unit": "mol/l"}},
-                        {"name": "ox_pos", 
-                         "concentration": {"value": 0.218, "unit": "mol/l"}},
-                        {"name": "red_pos",
-                        "concentration": {"value": 0.871, "unit": "mol/l"}}]
-        }
+        "species_inlet_neg": 
+        [
+            {"name": "MV^{2+}", "concentration": {"value": 0.5, "unit": "mol/l"}},
+            {"name": "MV^+",    "concentration": {"value": 0.5, "unit": "mol/l"}},
+            {"name": "T^{2+}",  "concentration": {"value": 0.0, "unit": "mol/l"}},
+            {"name": "T^+",     "concentration": {"value": 0.0, "unit": "mol/l"}}
+        ],
+        "species_inlet_pos": 
+        [
+            {"name": "MV^{2+}", "concentration": {"value": 0.0, "unit": "mol/l"}},
+            {"name": "MV^+",    "concentration": {"value": 0.0, "unit": "mol/l"}},
+            {"name": "T^{2+}",  "concentration": {"value": 0.5, "unit": "mol/l"}},
+            {"name": "T^+",     "concentration": {"value": 0.5, "unit": "mol/l"}}
+        ]
     },
     "discretization_parameters": {
-        "spatial_discretization": "fvm_2d",
+        "spatial_discretization": "fvm_1d",
         "temporal_discretization": "backward_euler",
-        "max_iterations": 10,
-        "relative_tolerance": 1e-4,
+        "max_iterations": 100,
+        "relative_tolerance": 1e-5,
         "absolute_tolerance": 1e-8,
         "mesh":
         {
             "relative_mesh_sizes": {
-                "hy_cell": [0.005, 0.01, 0.01, 0.01],
+                "hy_cell": [0.01, 0.02, 0.02, 0.02],
                 "hx_cc_neg": [0.3, 0.2],
-                "hx_el_neg": [0.08, 0.06, 0.03, 0.015],
-                "hx_el_pos": [0.015, 0.03, 0.06, 0.08],
+                "hx_el_neg": [0.1, 0.06, 0.03, 0.02],
+                "hx_el_pos": [0.02, 0.03, 0.06, 0.1],
                 "hx_cc_pos": [0.2, 0.3]
             }
         }
@@ -181,10 +198,12 @@
     "study_parameters": {
         "polarization": {
             "voltage_start": "ocv",
-            "voltage_stop": {"value": 0.25, "unit": "V"},
-            "voltage_step": {"value": -0.04, "unit": "V"},
-            "output_folder": "output"
+            "voltage_stop": {"value": 1.1, "unit": "V"},
+            "voltage_step": {"value": -0.05, "unit": "V"}
         },
+        "output_folder": "output_1d",
+        "output_file_name": "results.json",
+        "generate_figures": true,
         "non_isothermal": false,
         "migration": true
     }

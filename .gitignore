@@ -28,6 +28,11 @@ Manifest.toml
  
 # All files in the output folder
 output/*
+output_*
 
 # Settings of the vs-code editor
 .vscode/*
+
+# Temporary and local files
+tmp/*
+local/*

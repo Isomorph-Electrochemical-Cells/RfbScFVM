@@ -49,7 +49,6 @@ function create_grid_1d(cell_geometry::FlowCellGeometry{T},
     domain_cc_pos = (x_el_cc_pos, x_right)
     domain_x = (x_left, x_right)
 
-
     nodes_cc_neg = generate_grid_nodes(domain_cc_neg, mesh.hx_cc_neg)
     nodes_el_neg = generate_grid_nodes(domain_el_neg, mesh.hx_el_neg)
     nodes_el_pos = generate_grid_nodes(domain_el_pos, mesh.hx_el_pos)
@@ -91,11 +90,11 @@ function create_grid_1d(cell_geometry::FlowCellGeometry{T},
     subgrid_el_pos = subgrid(grid, [dom_ids[:el_pos]])
     subgrid_el = subgrid(grid, [dom_ids[:el_neg], dom_ids[:el_pos]])
     subgrids = (subgrid_neg=subgrid_neg,
-        subgrid_el_neg=subgrid_el_neg,
-        subgrid_sep=subgrid_sep,
-        subgrid_pos=subgrid_pos,
-        subgrid_el_pos=subgrid_el_pos,
-        subgrid_el=subgrid_el)
+                subgrid_el_neg=subgrid_el_neg,
+                subgrid_sep=subgrid_sep,
+                subgrid_pos=subgrid_pos,
+                subgrid_el_pos=subgrid_el_pos,
+                subgrid_el=subgrid_el)
 
     return (grid=grid, subgrids=subgrids)
 end
