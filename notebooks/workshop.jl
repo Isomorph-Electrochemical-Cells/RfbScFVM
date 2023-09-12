@@ -21,7 +21,7 @@ begin
 	catch
 		@info "Not using Revise"
 	end
-	
+
     import Pkg
     # activate the shared project environment
     Pkg.activate(Base.current_project())
@@ -48,7 +48,7 @@ md"""# RFB Cell Performance Model"""
 
 # ╔═╡ ba1699bf-ac99-47c8-9b2a-693278b205e1
 begin
-	plotter = GLMakie #CairoMakie
+	plotter = CairoMakie
 	nothing
 end
 
@@ -92,15 +92,15 @@ end
 begin
 	function param_inputs(params::Vector; title="", ranges, defaults::Vector)
 		return confirm(PlutoUI.combine() do Child
-			
+
 			inputs = [
 				(@htl("""<li> $(params[idx][2]): </br>
-				 $(Child(params[idx][1], Slider(ranges[idx], show_value=true, default=defaults[idx])))  
+				 $(Child(params[idx][1], Slider(ranges[idx], show_value=true, default=defaults[idx])))
 				</li>"""))
-				
+
 				for idx in eachindex(params)
 			]
-			
+
 			@htl("""
 			<h2> $title </h2>
 			<ul>
@@ -112,14 +112,14 @@ begin
 
 	param_velocity = ["velocity_y" => "Velocity (y-direction) [mm/s]"]
 	param_species_neg = "c_" .* base_data.boundary.species_neg.row .* "_neg" .=> "Concentration " .* base_data.boundary.species_neg.row .* "_neg" .* " [mol/l]"
-	param_species_pos = "c_" .* base_data.boundary.species_pos.row .* "_pos" .=> "Concentration " .* base_data.boundary.species_pos.row .* "_pos" .* " [mol/l]" 
+	param_species_pos = "c_" .* base_data.boundary.species_pos.row .* "_pos" .=> "Concentration " .* base_data.boundary.species_pos.row .* "_pos" .* " [mol/l]"
 
 	params_selectable = Pair{String, String}[]
 
 	append!(params_selectable, param_velocity)
 	append!(params_selectable, param_species_neg)
 	append!(params_selectable, param_species_pos)
-	
+
 	defaults=[base_data.boundary.v_out_neg]
 	append!(defaults, collect(base_data.boundary.species_neg))
 	append!(defaults, collect(base_data.boundary.species_pos))
@@ -127,7 +127,7 @@ begin
 	range_species_concentration = 0.0:0.1:5.0
 	ranges = [range_velocity]
 	append!(ranges, collect(Iterators.repeated(range_species_concentration, length(param_species_neg)+length(param_species_pos))))
-	
+
 	@bind slider_values param_inputs(params_selectable, title="Operating Conditions", ranges=ranges, defaults=defaults)
 end
 
@@ -140,7 +140,7 @@ md"# Run Polarization Simulation"
 # ╔═╡ 1de2a57e-cf12-4224-983f-3dedf33cff4a
 begin
 	slider_values
-	
+
 	params = copy(base_params)
 
 	params["discretization_parameters"]["spatial_discretization"] = selected_spatial_discr
@@ -150,7 +150,7 @@ begin
 		dict_species = dict_species_inlet_neg[idx]
 
 		idx_slider_value = findfirst(x->x==Symbol("c_" * base_data.boundary.species_neg.row[idx] * "_neg"), keys(slider_values))
-		
+
 		dict_species["concentration"] = unitful_to_dict(slider_values[idx_slider_value], "mol/l")
 	end
 
@@ -159,7 +159,7 @@ begin
 		dict_species = dict_species_inlet_pos[idx]
 
 		idx_slider_value = findfirst(x->x==Symbol("c_" * base_data.boundary.species_pos.row[idx] * "_pos"), keys(slider_values))
-		
+
 		dict_species["concentration"] = unitful_to_dict(slider_values[idx_slider_value], "mol/l")
 	end
 
@@ -168,7 +168,7 @@ begin
 	params["boundary_conditions"]["velocity_outlet_pos"] = unitful_to_dict(slider_values.velocity_y, "mm/s")
 
 	params["study_parameters"]["non_isothermal"] = selected_non_isothermal
-	
+
 	nothing
 end
 
@@ -187,7 +187,7 @@ begin
 	else
 		@error "unknown spatial discretization"
 	end
-	
+
     vis=GridVisualize.GridVisualizer(Plotter=plotter, layout=(1,1); size=grid_plot_size)
     gridplot!(vis, grid; show=true)
 end
