@@ -810,7 +810,7 @@ function contour_plot_2d(solutions, coords;
     return fig
 end
 
-function plot_grid(grid; plotter=GLMakie, size=size)
+function plot_grid(grid; plotter=CairoMakie, size=size)
     vis = GridVisualizer(Plotter=plotter, layout=(1,1); size=(800,800), show=false, reveal=false)
     gridplot!(vis, grid; show=false, reveal=false)
     return vis
