@@ -15,16 +15,16 @@ function test()
 
     # Test Donnan exclusion principle for an anion-exchange membrane
     zf = 1.0
-    ϕ_sep = donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
-    donnan_equilibrium_concentrations!(c_sep, ϕ, ϕ_sep, c, z, temp)
+    ϕ_sep = RfbScFVM.donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
+    RfbScFVM.donnan_equilibrium_concentrations!(c_sep, ϕ, ϕ_sep, c, z, temp)
 
     @test c_sep[1] ≈ zero(c_sep[1]) atol=1e-4
     @test c_sep[2] ≈ cf rtol=1e-4
 
     # Test Donnan exclusion principle for a cation-exchange membrane
     zf = -1.0
-    ϕ_sep = donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
-    donnan_equilibrium_concentrations!(c_sep, ϕ, ϕ_sep, c, z, temp)
+    ϕ_sep = RfbScFVM.donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
+    RfbScFVM.donnan_equilibrium_concentrations!(c_sep, ϕ, ϕ_sep, c, z, temp)
 
     @test c_sep[1] ≈ cf rtol=1e-4
     @test c_sep[2] ≈ zero(c_sep[2]) atol=1e-4
@@ -32,14 +32,14 @@ function test()
     # Special case when only counter-ion species are present
     zf = 1.0
     c = [0.0, 1.0]
-    ϕ_sep = donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
+    ϕ_sep = RfbScFVM.donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
 
     # check if the numerical solution well-approximates the analytical solution of ϕ
     ϕ_sep_exact = ϕ - log(-cf * zf / (c[2] * z[2])) * temp / z[2]
     @test ϕ_sep ≈ ϕ_sep_exact rtol=1e-6
 
     # check that only counter-ion species are present in the membrane
-    donnan_equilibrium_concentrations!(c_sep, ϕ, ϕ_sep, c, z, temp)
+    RfbScFVM.donnan_equilibrium_concentrations!(c_sep, ϕ, ϕ_sep, c, z, temp)
     @test c_sep[1] ≈ zero(c_sep[1]) atol=1e-4
     @test c_sep[2] ≈ cf rtol=1e-4
 
@@ -53,8 +53,8 @@ function test()
     temp = 2.5
     zf = 4.0
 
-    ϕ_sep = donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
-    donnan_equilibrium_concentrations!(c_sep, ϕ, ϕ_sep, c, z, temp)
+    ϕ_sep = RfbScFVM.donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
+    RfbScFVM.donnan_equilibrium_concentrations!(c_sep, ϕ, ϕ_sep, c, z, temp)
 
     # check Donnan exclusion principle for an anion-exchange membrane
     @test all(c_sep[1:(n-1)] .< 1e-3)

@@ -64,10 +64,9 @@ md"# Select Parameter File"
 # ╔═╡ 46ee0afc-d471-4d6e-87c2-542afeacfd60
 begin
 	relaad_file
-	input_dir = "../input"
-	default_param_file_name = "example_mv_temptma_polarization_isothermal_1d.json"
+	default_param_file_name = "../input/example_mv_temptma_polarization_isothermal_1d.json"
 	file_name = input_param_file === nothing ? default_param_file_name : input_param_file["name"]
-	base_params = read_config_file(joinpath(input_dir, file_name))
+	base_params = read_config_file(file_name)
 	base_data = preprocess_parameters(base_params)
 	nothing
 end
@@ -220,8 +219,9 @@ md"# Spatially Resolved Fields"
 begin
 	dim_polarization_results = dimensional(polarization_results, data)
 	vec_Δϕₛ = round.(typeof(1.0u"V"), dim_polarization_results.vec_Δϕₛ,digits=5)
+	vec_i = round.(typeof(1.0u"mA/cm^2"), dim_polarization_results.vec_i,digits=5)
 	polarization_indices = collect(1:length(vec_Δϕₛ))
-	@bind selected_cell_voltage Select(polarization_indices .=> vec_Δϕₛ)
+	@bind selected_cell_voltage Select(polarization_indices .=> zip(vec_Δϕₛ, vec_i))
 end
 
 # ╔═╡ 83b3908a-fb7e-40ed-9db0-81bbdf4f0f24
@@ -242,7 +242,7 @@ end
 begin
 	dict_figures = sort(lst_dict_figures[selected_cell_voltage])
 	keys_figures = collect(keys(dict_figures))
-	@bind selected_figure (Select(keys_figures))
+	@bind selected_figure (Select(keys_figures, default="c"))
 end
 
 # ╔═╡ 92e9cace-97c0-4ad7-9a9e-0d67cc4a7e06
@@ -299,4 +299,4 @@ md"""# Appendix: Load Packages"""
 # ╟─c5a82d16-4632-4d72-9d95-1b53d130d6a0
 # ╟─d1a80cff-627c-4f10-9695-017104e2d967
 # ╟─0755ef5b-0154-4619-bdc9-ad62e3b92dda
-# ╠═77f26554-1a7c-11ee-2353-5b8000f42f71
+# ╟─77f26554-1a7c-11ee-2353-5b8000f42f71

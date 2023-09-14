@@ -240,8 +240,8 @@
         },
         "output_folder": "output_hom_react_1d",
         "output_file_name": "results.json",
-        "generate_figures": true,
+        "generate_figures": false,
         "non_isothermal": false,
-        "migration": true
+        "logging_level": "debug"
     }
 }

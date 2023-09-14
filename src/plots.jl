@@ -239,7 +239,6 @@ function plot_all_fields_1d(solution, grid, subgrids, data)
         c_all_species_pos[end, idx] = concentration_eliminated_species(c_all_species_pos[1:(end-1), idx], data)
     end
 
-
     z = data.electrolyte.species[col=Key("charge")]
     cf = data.sep.cf
     zf = data.sep.zf
@@ -812,12 +811,7 @@ function contour_plot_2d(solutions, coords;
 end
 
 function plot_grid(grid; plotter=GLMakie, size=size)
-    vis=GridVisualizer(Plotter=plotter, layout=(1,1); size=(800,800),
-                        legend=:rt, show=false, reveal=false)
+    vis = GridVisualizer(Plotter=plotter, layout=(1,1); size=(800,800), show=false, reveal=false)
     gridplot!(vis, grid; show=false, reveal=false)
     return vis
-end
-
-function save(file_path, vis::GridVisualizer)
-    GridVisualize.save(file_path, vis)
 end

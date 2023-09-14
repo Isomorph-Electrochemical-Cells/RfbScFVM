@@ -182,7 +182,7 @@ function run(input_file_path)
         mkpath(output_path)
         output_path_figures = joinpath(pwd(), output_path)
         vis = plot_grid(grid; plotter=CairoMakie);
-        save(joinpath(output_path_figures, "grid.png"), vis)
+        GridVisualize.save(joinpath(output_path_figures, "grid.png"), vis)
     end
 
     results = Dict()
@@ -227,21 +227,19 @@ function run(input_file_path)
         for idx in eachindex(solution)
             str_voltage = @sprintf "%0.3f" cell_values[idx]
             subfolder_name = "voltage_" * str_voltage * "_[V]_" * string(idx)
+            output_dir_path = joinpath(polarization_folder, subfolder_name)
             if occursin("1d", data.discr.spatial_discr)
                 dict_figures = plot_all_fields_1d(solution[idx], grid, subgrids, data)
-                relative_path = joinpath(polarization_folder, subfolder_name)
-                save_plots(dict_figures; relative_path=relative_path)
+                save_plots(dict_figures; relative_path=output_dir_path)
             else
                 dict_figures_2d = plot_all_fields_2d(solution[idx], grid, subgrids, data)
-                relative_path = joinpath(polarization_folder, subfolder_name)
-                save_plots(dict_figures_2d; relative_path=relative_path,
+                save_plots(dict_figures_2d; relative_path=output_dir_path,
                            file_name_suffix = "_2d")
 
                 solution_proj = project_solutions(solution[idx], sys, grid, subgrids, data)
                 dict_figures = plot_all_fields_1d(solution_proj[2], grid_proj_1d, subgrids_proj_1d, data)
 
-                relative_path = joinpath(polarization_folder, "avg_x")
-                save_plots(dict_figures; relative_path=relative_path)
+                save_plots(dict_figures; relative_path=joinpath(output_dir_path, "avg_x"))
             end
         end
     end

@@ -26,9 +26,11 @@ end
 
 function homogeneous_reaction_1d()
     # read configuration parameters from file
+
+    package_path = pkgdir(RfbScFVM)
     input_file_path = "test/test_data/homogeneous_reactions.json"
 
-    dict_input_data = read_config_file(input_file_path)
+    dict_input_data = read_config_file(joinpath(package_path, input_file_path))
     dict_input_data["discretization_parameters"]["spatial_discretization"] = "fvm_1d"
     (solution, data, subgrids) = run_system(dict_input_data)
 

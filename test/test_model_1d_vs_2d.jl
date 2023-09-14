@@ -37,9 +37,10 @@ end
 function test_1d_vs_2d_systems(;non_isothermal=non_isothermal)
 
     # read configuration parameters from file
+    package_path = pkgdir(RfbScFVM)
     input_file_path = "test/test_data/mv_temptma_polarization_soc50_isothermal_1d.json"
 
-    dict_input_data = read_config_file(input_file_path)
+    dict_input_data = read_config_file(joinpath(package_path, input_file_path))
     dict_input_data["study_parameters"]["non_isothermal"] = non_isothermal
 
     dict_input_data["discretization_parameters"]["spatial_discretization"] = "fvm_1d"
