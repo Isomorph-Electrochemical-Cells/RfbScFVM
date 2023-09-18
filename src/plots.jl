@@ -343,8 +343,8 @@ function plot_all_fields_1d(solution, grid, subgrids, data)
                         labels=[label], axis_kwargs=axis_kwargs)
     figures["sigma_l"] = fig
 
-    ϕₛ_cc_neg_view = view(solution[var[dom_ids[:cc_neg]].ϕₛ,:], subgrids.subgrid_el_neg)
-    ϕₛ_cc_pos_view = view(solution[var[dom_ids[:cc_pos]].ϕₛ,:], subgrids.subgrid_el_pos)
+    ϕₛ_cc_neg_view = view(solution[var[dom_ids[:cc_neg]].ϕₛ,:], subgrids.subgrid_cc_neg)
+    ϕₛ_cc_pos_view = view(solution[var[dom_ids[:cc_pos]].ϕₛ,:], subgrids.subgrid_cc_pos)
     ϕₛ_el_neg_view = view(solution[var[dom_ids[:el_neg]].ϕₛ,:], subgrids.subgrid_el_neg)
     ϕₛ_el_pos_view = view(solution[var[dom_ids[:el_pos]].ϕₛ,:], subgrids.subgrid_el_pos)
     ϕₗ_el_neg_view = view(solution[var[dom_ids[:el_neg]].ϕₗ,:], subgrids.subgrid_el_neg)
