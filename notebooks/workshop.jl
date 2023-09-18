@@ -64,8 +64,9 @@ md"# Select Parameter File"
 # ╔═╡ 46ee0afc-d471-4d6e-87c2-542afeacfd60
 begin
 	relaad_file
-	default_param_file_name = "../input/example_mv_temptma_polarization_isothermal_1d.json"
-	file_name = input_param_file === nothing ? default_param_file_name : input_param_file["name"]
+	path_input_folder =  joinpath("..", "input")
+	default_param_file_name = joinpath(path_input_folder, "example_mv_temptma_polarization_isothermal_1d.json")
+	file_name = input_param_file === nothing ? default_param_file_name : joinpath(path_input_folder, input_param_file["name"])
 	base_params = read_config_file(file_name)
 	base_data = preprocess_parameters(base_params)
 	nothing
@@ -276,7 +277,7 @@ md"""# Appendix: Load Packages"""
 # ╟─e9537640-f686-44c3-b055-5019776b561c
 # ╟─76569a6d-84bc-4573-b0ea-6cf1411b2490
 # ╟─9f632fd1-bd9d-442c-b637-97a338ab1d77
-# ╟─46ee0afc-d471-4d6e-87c2-542afeacfd60
+# ╠═46ee0afc-d471-4d6e-87c2-542afeacfd60
 # ╟─cb2dc619-a5fc-4f76-93da-e7636824297f
 # ╟─16727286-e669-4132-9577-b8e53a11e009
 # ╟─9214d9ee-3983-4272-8b15-0c7033ba8109
