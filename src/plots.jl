@@ -343,6 +343,8 @@ function plot_all_fields_1d(solution, grid, subgrids, data)
                         labels=[label], axis_kwargs=axis_kwargs)
     figures["sigma_l"] = fig
 
+    ϕₛ_cc_neg_view = view(solution[var[dom_ids[:cc_neg]].ϕₛ,:], subgrids.subgrid_el_neg)
+    ϕₛ_cc_pos_view = view(solution[var[dom_ids[:cc_pos]].ϕₛ,:], subgrids.subgrid_el_pos)
     ϕₛ_el_neg_view = view(solution[var[dom_ids[:el_neg]].ϕₛ,:], subgrids.subgrid_el_neg)
     ϕₛ_el_pos_view = view(solution[var[dom_ids[:el_pos]].ϕₛ,:], subgrids.subgrid_el_pos)
     ϕₗ_el_neg_view = view(solution[var[dom_ids[:el_neg]].ϕₗ,:], subgrids.subgrid_el_neg)
@@ -427,27 +429,50 @@ function plot_all_fields_1d(solution, grid, subgrids, data)
         r_pos = data.el_pos.reactions[1]
         s_r_pos = iᵥ_pos .* temp_pos * r_pos.Δs / r_pos.ν_el # FIXME: Allow multiple reactions
 
+        nodes_cc_neg = vec(subgrids.subgrid_cc_neg[ExtendableGrids.Coordinates])
+        dx_cc_neg = nodes_cc_neg[2:end]-nodes_cc_neg[1:(end-1)]
+        nodes_cc_pos = vec(subgrids.subgrid_cc_pos[ExtendableGrids.Coordinates]) .+ data.geom.lx_sep
+        dx_cc_pos = nodes_cc_pos[2:end]-nodes_cc_pos[1:(end-1)]
         nodes_el_neg = vec(subgrids.subgrid_el_neg[ExtendableGrids.Coordinates])
         dx_el_neg = nodes_el_neg[2:end]-nodes_el_neg[1:(end-1)]
         nodes_el_pos = vec(subgrids.subgrid_el_pos[ExtendableGrids.Coordinates]) .+ data.geom.lx_sep
         dx_el_pos = nodes_el_pos[2:end]-nodes_el_pos[1:(end-1)]
 
-        s_j_neg = similar(dx_el_neg)
-        s_j_pos = similar(dx_el_pos)
+        s_j_cc_neg = similar(dx_cc_neg)
+        s_j_cc_pos = similar(dx_cc_pos)
+        s_j_el_neg = similar(dx_el_neg)
+        s_j_el_pos = similar(dx_el_pos)
+
+        nodes_cc_neg_center = similar(dx_cc_neg)
+        nodes_cc_pos_center = similar(dx_cc_pos)
         nodes_el_neg_center = similar(dx_el_neg)
         nodes_el_pos_center = similar(dx_el_pos)
+
+        σₛ_cc_neg = data.cc_neg.σₑ
+        for idx in eachindex(dx_cc_neg)
+            dx = dx_cc_neg[idx]
+            s_j_cc_neg[idx] = σₛ_cc_neg * ((ϕₛ_cc_neg_view[idx+1] - ϕₛ_cc_neg_view[idx]) / dx).^2
+            nodes_cc_neg_center[idx] = (nodes_cc_neg[idx] + nodes_cc_neg[idx+1]) / 2
+        end
+
+        σₛ_cc_pos = data.cc_pos.σₑ
+        for idx in eachindex(dx_cc_neg)
+            dx = dx_cc_pos[idx]
+            s_j_cc_pos[idx] = σₛ_cc_pos * ((ϕₛ_cc_pos_view[idx+1] - ϕₛ_cc_pos_view[idx]) / dx).^2
+            nodes_cc_pos_center[idx] = (nodes_cc_pos[idx] + nodes_cc_pos[idx+1]) / 2
+        end
 
         for idx in eachindex(dx_el_neg)
             σₗ_center = (σₗ_views_neg[idx] + σₗ_views_neg[idx+1]) / 2
             dx = dx_el_neg[idx]
-            s_j_neg[idx] = σₗ_center * ((ϕₗ_el_neg_view[idx+1] - ϕₗ_el_neg_view[idx]) / dx).^2
+            s_j_el_neg[idx] = σₗ_center * ((ϕₗ_el_neg_view[idx+1] - ϕₗ_el_neg_view[idx]) / dx).^2
             nodes_el_neg_center[idx] = (nodes_el_neg[idx] + nodes_el_neg[idx+1]) / 2
         end
 
         for idx in eachindex(dx_el_pos)
             σₗ_center = (σₗ_views_pos[idx] + σₗ_views_pos[idx+1]) / 2
             dx = dx_el_pos[idx]
-            s_j_pos[idx] = σₗ_center * ((ϕₗ_el_pos_view[idx+1] - ϕₗ_el_pos_view[idx]) / dx).^2
+            s_j_el_pos[idx] = σₗ_center * ((ϕₗ_el_pos_view[idx+1] - ϕₗ_el_pos_view[idx]) / dx).^2
             nodes_el_pos_center[idx] = (nodes_el_pos[idx] + nodes_el_pos[idx+1]) / 2
         end
 
@@ -462,12 +487,22 @@ function plot_all_fields_1d(solution, grid, subgrids, data)
         axis_kwargs[:ylabel] = "Energy source [$h0_unit]"
         labels = [latexstring("S^{(\\eta)}"), latexstring("S^{(r)}"), latexstring("S^{(j)}")]
 
+        nodes_cc_neg_center *= L0_value
         nodes_el_neg_center *= L0_value
         nodes_el_pos_center *= L0_value
+        nodes_cc_pos_center *= L0_value
 
         ϵL0 = data.scaling_params.ϵL0
-        fig = line_plot_1d([[s_η_neg; s_η_pos], [s_r_neg; s_r_pos], ([s_j_neg; s_j_sep_neg; s_j_sep_pos; s_j_pos] * ϵL0^2) ] * V0_iv0_value, # FIXME: IS THIS CORRECT??
-                            [[coord_el_neg; coord_el_pos], [coord_el_neg; coord_el_pos], [nodes_el_neg_center; coord_el_neg[end]; coord_el_pos[1]; nodes_el_pos_center]];
+        heat_production_values = [[s_η_neg; s_η_pos],
+                                  [s_r_neg; s_r_pos],
+                                 ([s_j_cc_neg; s_j_el_neg; s_j_sep_neg;
+                                   s_j_sep_pos; s_j_el_pos; s_j_cc_pos] * ϵL0^2) ]
+        heat_production_values *= V0_iv0_value
+        fig = line_plot_1d(heat_production_values,
+                            [[coord_el_neg; coord_el_pos],
+                            [coord_el_neg; coord_el_pos],
+                            [nodes_cc_neg_center; nodes_el_neg_center; coord_el_neg[end];
+                            coord_el_pos[1]; nodes_el_pos_center; nodes_cc_pos_center]];
                             labels=labels, axis_kwargs=axis_kwargs)
         figures["heat_production"] = fig
     end

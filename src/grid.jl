@@ -84,16 +84,20 @@ function create_grid_1d(cell_geometry::FlowCellGeometry{T},
 
     # generate subgrids over different subdomains (and unions of subdomains)
     subgrid_neg = subgrid(grid, [dom_ids[:cc_neg], dom_ids[:el_neg]])
+    subgrid_cc_neg = subgrid(grid, [dom_ids[:cc_neg]])
     subgrid_el_neg = subgrid(grid, [dom_ids[:el_neg]])
     subgrid_sep = subgrid(grid, [dom_ids[:sep]]; boundary=true, project=false)
     subgrid_pos = subgrid(grid, [dom_ids[:el_pos], dom_ids[:cc_pos]])
     subgrid_el_pos = subgrid(grid, [dom_ids[:el_pos]])
+    subgrid_cc_pos = subgrid(grid, [dom_ids[:cc_pos]])
     subgrid_el = subgrid(grid, [dom_ids[:el_neg], dom_ids[:el_pos]])
     subgrids = (subgrid_neg=subgrid_neg,
+                subgrid_cc_neg=subgrid_cc_neg,
                 subgrid_el_neg=subgrid_el_neg,
                 subgrid_sep=subgrid_sep,
                 subgrid_pos=subgrid_pos,
                 subgrid_el_pos=subgrid_el_pos,
+                subgrid_cc_pos=subgrid_cc_pos,
                 subgrid_el=subgrid_el)
 
     return (grid=grid, subgrids=subgrids)
