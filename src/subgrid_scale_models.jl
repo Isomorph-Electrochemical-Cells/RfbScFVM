@@ -43,7 +43,7 @@ function donnan_equlibrium_potential(ϕ, c, z, cf, zf, temp)
     p = (ϕ=ϕ, c=c, z=z, cf=cf, zf=zf, temp=temp)
     ϕ_init = ϕ
     prob = NonlinearProblem(_donnan_equilibrium_function, ϕ_init, p)
-    sol = solve(prob, NewtonRaphson(), reltol = 1e-8)
+    sol = solve(prob, SimpleTrustRegion(), reltol = 1e-8)
 
     return sol.u
 end

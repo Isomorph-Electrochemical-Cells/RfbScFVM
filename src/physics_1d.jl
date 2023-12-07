@@ -48,22 +48,35 @@ function system_reaction_1d!(f, u, node, data)
             c_in = data.boundary.species_pos
         end
 
+        # l_el = region == data.dom[:el_neg] ? data.geom.lx_el_neg : data.geom.lx_el_pos
+        # vy_in = vy
+        # v_mem = separator_velocity(u, node, data)
+        # vy_avg = vy + ly/2 * (-v_mem/l_el)
         for idx in eachindex(idx_c2u)
             f[idx_c2u[idx]] -= 2 * PE0 * vy * (c_in[idx] - u[idx_c2u[idx]]) / ly
+            # c_in = c_in[idx]
+            # c_avg = u[idx_c2u[idx]]
+
+            # f[idx_c2u[idx]] -= (PE0 / ly) * (2 * vy_in * c_avg + 2 * vy_avg * c_in -
+            #                                  4 * vy_avg * c_avg)
         end
 
         if data.study.non_isothermal
             temp_in = data.boundary.temp_amb
             cpᵥ = data.electrolyte.cpᵥ
-            f[data.idx[region].temp] = -2 * PE0 * cpᵥ * vy * (temp_in - temp) / ly
+            f[data.idx[region].temp] -= 2 * PE0 * cpᵥ * vy * (temp_in - temp) / ly
         end
     end
 
 end
 
+function separator_velocity(u, node, data)
+
+end
+
 function system_edgereaction_1d!(f, u, edge, data)
     # evaluate joule heating term
-    if data.study.non_isothermal #FIXME: UNCOMMENT
+    if data.study.non_isothermal
         region = edge.region
         temp_l = data.idx[data.dom[:el_neg]].temp
         temp_r = data.idx[data.dom[:el_pos]].temp
