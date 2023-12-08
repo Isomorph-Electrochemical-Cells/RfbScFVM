@@ -5,9 +5,9 @@ function solve_steady_state_problem(system, inival, applied_voltage_values)
     verbose = ""
     if data.study.logging_level == "debug"
         # enable allocation and deprecation warnings in VoronoiFVM if logging level is "debug"
-        vebose = "adenl"
+        verbose = "adnl"
     elseif data.study.logging_level == "info"
-        verbose = "enl"
+        verbose = "nl"
     end
 
     control = VoronoiFVM.SolverControl(verbose=verbose,
