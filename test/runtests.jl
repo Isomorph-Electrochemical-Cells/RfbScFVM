@@ -23,13 +23,12 @@ end
 end
 
 @testset "Aqua" begin
-    Aqua.test_project_toml_formatting(RfbScFVM)
-    Aqua.test_deps_compat(RfbScFVM)
-    Aqua.test_stale_deps(RfbScFVM; ignore=[:Pluto, :PlutoVista, :PlutoUI,
-                                           :DataFrames])
-    Aqua.test_project_extras(RfbScFVM)
-    Aqua.test_piracy(RfbScFVM)
-    Aqua.test_undefined_exports(RfbScFVM)
+    Aqua.test_ambiguities([RfbScFVM])
     Aqua.test_unbound_args(RfbScFVM)
-    Aqua.test_ambiguities(RfbScFVM)
+    Aqua.test_undefined_exports(RfbScFVM)
+    Aqua.test_project_extras(RfbScFVM)
+    Aqua.test_stale_deps(RfbScFVM; ignore=[:Pluto, :PlutoVista, :PlutoUI, :DataFrames])
+    Aqua.test_deps_compat(RfbScFVM)
+    Aqua.test_piracies(RfbScFVM)
+    Aqua.test_persistent_tasks(RfbScFVM)
 end
